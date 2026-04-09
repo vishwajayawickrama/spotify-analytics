@@ -1,0 +1,14 @@
+# Ballerina configurable values for the spotify_integration service.
+# Copy to `Config.toml` and adjust as needed. See:
+# https://ballerina.io/learn/provide-values-to-configurable-variables/
+#
+# Note: Spotify client credentials are NOT set here. Each request arrives
+# with the signed-in user's OAuth access token in the Authorization header,
+# which this service forwards to the Spotify Web API. OAuth is owned by the
+# Next.js frontend (NextAuth "Sign in with Spotify").
+
+spotifyApiUrl = "https://api.spotify.com/v1"
+servicePort = 8080
+
+# Origin allowed by CORS — the URL where the Next.js app is served.
+allowedOrigin = "http://localhost:3000"
