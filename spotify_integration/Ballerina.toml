@@ -1,0 +1,9 @@
+[package]
+org = "vishwajayawickrama"
+name = "spotify_integration"
+version = "0.1.0"
+distribution = "2201.13.3"
+title = "spotify-integration"
+
+[build-options]
+sticky = true
