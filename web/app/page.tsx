@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -14,23 +15,34 @@ export default function HomePage() {
 
   return (
     <div className="signin-screen">
+      <div className="aurora" aria-hidden />
       <div className="signin-card">
-        <div
-          className="brand-dot"
-          style={{ width: 32, height: 32, margin: "0 auto" }}
-        />
-        <h1>Spotify Analytics</h1>
+        <div className="signin-badge">
+          <span className="brand-dot" />
+          Spotify Analytics
+        </div>
+        <h1>
+          Your listening,
+          <br />
+          <span className="grad-text">beautifully understood.</span>
+        </h1>
         <p>
-          Sign in with Spotify to see your top artists, top tracks, recent
-          listening history, and the genres that define your taste.
+          Top artists, top tracks, recent listening history, and the genres
+          that define your taste — pulled live from the Spotify Web API.
         </p>
-        <button
-          className="btn"
-          onClick={() => signIn("spotify", { callbackUrl: "/dashboard" })}
-          disabled={status === "loading"}
-        >
-          {status === "loading" ? "Loading…" : "Sign in with Spotify"}
-        </button>
+        <div className="signin-actions">
+          <button
+            className="btn"
+            onClick={() => signIn("spotify", { callbackUrl: "/dashboard" })}
+            disabled={status === "loading"}
+          >
+            {status === "loading" ? "Loading…" : "Sign in with Spotify"}
+          </button>
+          <Link href="/dashboard" className="btn-ghost btn-ghost-lg">
+            Try the demo →
+          </Link>
+        </div>
+        <div className="signin-foot">No account needed for the demo</div>
       </div>
     </div>
   );
