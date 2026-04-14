@@ -42,6 +42,35 @@ function formatNumber(n: number) {
   return n.toLocaleString();
 }
 
+function deriveTopGenres(summary: AnalyticsSummary) {
+  if (summary.topGenres.length > 0) {
+    return summary.topGenres;
+  }
+
+  const genreCounts = new Map<string, number>();
+  summary.topArtists.forEach((artist) => {
+    artist.genres.forEach((genre) => {
+      const normalized = genre.trim();
+      if (!normalized) return;
+      genreCounts.set(normalized, (genreCounts.get(normalized) ?? 0) + 1);
+    });
+  });
+
+  return [...genreCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([genre]) => genre);
+}
+
+function deriveAveragePopularity(summary: AnalyticsSummary) {
+  const tracksWithPopularity = summary.topTracks.filter((track) => track.popularity > 0);
+  if (tracksWithPopularity.length === 0) {
+    return Math.max(0, Math.round(Number(summary.averageTrackPopularity) || 0));
+  }
+
+  const total = tracksWithPopularity.reduce((acc, track) => acc + track.popularity, 0);
+  return Math.round(total / tracksWithPopularity.length);
+}
+
 // Square block used as a stand-in for album / artist art when no real
 // image URL is available. Uses a deterministic gradient + initials so the
 // demo dashboard renders cleanly without external requests.
@@ -194,15 +223,18 @@ export default function DashboardPage() {
   const listenerStats = useMemo(() => {
     if (!summary) return null;
     const topArtist = summary.topArtists[0];
-    const topGenre = summary.topGenres[0];
+    const derivedTopGenres = deriveTopGenres(summary);
+    const topGenre = derivedTopGenres[0];
     const tracks = summary.topTracks;
     const avgDurationMs = tracks.length
       ? tracks.reduce((acc, t) => acc + t.duration_ms, 0) / tracks.length
       : 0;
-    const avgPopularity = Math.round(Number(summary.averageTrackPopularity));
+    const avgPopularity = deriveAveragePopularity(summary);
     // Lower popularity = more obscure taste. Map [0..100] -> obscure..mainstream.
     const tasteLabel =
-      avgPopularity >= 75
+      tracks.length === 0
+        ? "No data yet"
+        : avgPopularity >= 75
         ? "Mainstream"
         : avgPopularity >= 55
         ? "Balanced"
@@ -213,6 +245,7 @@ export default function DashboardPage() {
     return {
       topArtist,
       topGenre,
+      topGenres: derivedTopGenres,
       avgDurationMs,
       avgPopularity,
       tasteLabel,
@@ -356,12 +389,12 @@ export default function DashboardPage() {
           <section className="section">
             <h2>Top Genres</h2>
             <div className="chips">
-              {summary.topGenres.length === 0 && (
+              {listenerStats?.topGenres.length === 0 && (
                 <span className="meta" style={{ color: "var(--fg-muted)" }}>
                   No genre data for this range.
                 </span>
               )}
-              {summary.topGenres.map((g, i) => (
+              {listenerStats?.topGenres.map((g, i) => (
                 <span key={g} className="chip" style={{ animationDelay: `${i * 30}ms` }}>
                   {g}
                 </span>
