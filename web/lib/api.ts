@@ -88,13 +88,22 @@ export const analyticsApi = {
     call<AnalyticsSummary>(`/summary?timeRange=${timeRange}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
     }),
-  profile: () => call<UserProfile>(`/profile`),
-  topArtists: (timeRange: TimeRange = "medium_term", limit = 20) =>
-    call<SpotifyArtist[]>(`/top-artists?timeRange=${timeRange}&limit=${limit}`),
-  topTracks: (timeRange: TimeRange = "medium_term", limit = 20) =>
-    call<SpotifyTrack[]>(`/top-tracks?timeRange=${timeRange}&limit=${limit}`),
-  recentlyPlayed: (limit = 20) =>
-    call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`)
+  profile: (accessToken?: string) =>
+    call<UserProfile>(`/profile`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    }),
+  topArtists: (timeRange: TimeRange = "medium_term", limit = 20, accessToken?: string) =>
+    call<SpotifyArtist[]>(`/top-artists?timeRange=${timeRange}&limit=${limit}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    }),
+  topTracks: (timeRange: TimeRange = "medium_term", limit = 20, accessToken?: string) =>
+    call<SpotifyTrack[]>(`/top-tracks?timeRange=${timeRange}&limit=${limit}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    }),
+  recentlyPlayed: (limit = 20, accessToken?: string) =>
+    call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    })
 };
 
 export const authApi = {

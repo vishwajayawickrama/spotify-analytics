@@ -9,115 +9,17 @@ import {
   type AnalyticsSummary,
   type TimeRange
 } from "@/lib/api";
+import {
+  ArtBlock,
+  TIME_RANGES,
+  deriveAveragePopularity,
+  deriveTopGenres,
+  formatDuration,
+  formatNumber,
+  formatRelative,
+  pickImage
+} from "@/lib/dashboardShared";
 import { gradientFor } from "@/lib/placeholderData";
-
-const TIME_RANGES: { value: TimeRange; label: string }[] = [
-  { value: "short_term", label: "Last 4 weeks" },
-  { value: "medium_term", label: "Last 6 months" },
-  { value: "long_term", label: "All time" }
-];
-
-function formatDuration(ms: number) {
-  const totalSec = Math.round(ms / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-function formatRelative(iso: string) {
-  const then = new Date(iso).getTime();
-  const diff = Date.now() - then;
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const d = Math.floor(hr / 24);
-  return `${d}d ago`;
-}
-
-function formatNumber(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return n.toLocaleString();
-}
-
-function deriveTopGenres(summary: AnalyticsSummary) {
-  if (summary.topGenres.length > 0) {
-    return summary.topGenres;
-  }
-
-  const genreCounts = new Map<string, number>();
-  summary.topArtists.forEach((artist) => {
-    artist.genres.forEach((genre) => {
-      const normalized = genre.trim();
-      if (!normalized) return;
-      genreCounts.set(normalized, (genreCounts.get(normalized) ?? 0) + 1);
-    });
-  });
-
-  return [...genreCounts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([genre]) => genre);
-}
-
-function deriveAveragePopularity(summary: AnalyticsSummary) {
-  const tracksWithPopularity = summary.topTracks.filter((track) => track.popularity > 0);
-  if (tracksWithPopularity.length === 0) {
-    return Math.max(0, Math.round(Number(summary.averageTrackPopularity) || 0));
-  }
-
-  const total = tracksWithPopularity.reduce((acc, track) => acc + track.popularity, 0);
-  return Math.round(total / tracksWithPopularity.length);
-}
-
-// Square block used as a stand-in for album / artist art when no real
-// image URL is available. Uses a deterministic gradient + initials so the
-// demo dashboard renders cleanly without external requests.
-function ArtBlock({
-  seed,
-  size = 56,
-  imageUrl
-}: {
-  seed: string;
-  size?: number;
-  imageUrl?: string;
-}) {
-  const initials = seed
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-  if (imageUrl) {
-    return (
-      <img
-        className="art-block"
-        src={imageUrl}
-        alt={seed}
-        style={{ width: size, height: size, objectFit: "cover" }}
-      />
-    );
-  }
-  return (
-    <div
-      className="art-block"
-      style={{
-        width: size,
-        height: size,
-        backgroundImage: gradientFor(seed)
-      }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function pickImage(images: { url: string; width?: number; height?: number }[] | undefined, target = 56) {
-  if (!images || images.length === 0) return undefined;
-  const sorted = [...images].sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
-  return (sorted.find((im) => (im.width ?? 0) >= target) ?? sorted[sorted.length - 1]).url;
-}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -409,7 +311,7 @@ export default function DashboardPage() {
                 className="see-more"
                 type="button"
                 onClick={() => {
-                  /* TODO: navigate to /artists once that page exists */
+                  router.push(`/dashboard/artists?timeRange=${timeRange}`);
                 }}
               >
                 See more →
@@ -455,7 +357,13 @@ export default function DashboardPage() {
             <section className="section">
               <div className="section-head">
                 <h2>Top Tracks</h2>
-                <button className="see-more" type="button">
+                <button
+                  className="see-more"
+                  type="button"
+                  onClick={() => {
+                    router.push(`/dashboard/tracks?timeRange=${timeRange}`);
+                  }}
+                >
                   See more →
                 </button>
               </div>
@@ -479,7 +387,13 @@ export default function DashboardPage() {
             <section className="section">
               <div className="section-head">
                 <h2>Recently Played</h2>
-                <button className="see-more" type="button">
+                <button
+                  className="see-more"
+                  type="button"
+                  onClick={() => {
+                    router.push("/dashboard/recently-played");
+                  }}
+                >
                   See more →
                 </button>
               </div>

@@ -253,6 +253,23 @@ button {
   transform: translateX(2px);
 }
 
+.back-link {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -402,6 +419,12 @@ button {
   scroll-snap-align: start;
 }
 
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
 .artist-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -450,6 +473,17 @@ button {
 .artist-card .meta {
   font-size: 12px;
   color: var(--fg-muted);
+}
+
+.detail-artist-card {
+  gap: 10px;
+}
+
+.detail-rank {
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .pop-bar {
@@ -534,6 +568,17 @@ button {
   min-width: 0;
 }
 
+.detail-meta-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.detail-list-row {
+  grid-template-columns: 28px 52px minmax(0, 1fr) auto;
+}
+
 .art-block {
   border-radius: 8px;
   display: grid;
@@ -576,6 +621,14 @@ button {
   transform: translateY(-1px);
 }
 
+.chip-muted {
+  color: var(--fg-muted);
+}
+
+.detail-chip-wrap {
+  min-height: 34px;
+}
+
 /* ---------- Controls / banners ---------- */
 
 .controls {
@@ -598,6 +651,18 @@ button {
 .banner strong {
   color: var(--accent-2);
   margin-right: 4px;
+}
+
+.detail-hero {
+  margin-top: 28px;
+}
+
+.detail-copy {
+  max-width: 680px;
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .error {
