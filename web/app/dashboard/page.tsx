@@ -1,9 +1,10 @@
 "use client";
 
-import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  authApi,
   analyticsApi,
+  type AuthSession,
   type AnalyticsSummary,
   type TimeRange
 } from "@/lib/api";
@@ -65,13 +66,9 @@ function ArtBlock({ seed, size = 56 }: { seed: string; size?: number }) {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  const sessionError = (session as any)?.error as string | undefined;
-
-  // Demo mode: render placeholder data whenever there's no real Spotify
-  // access token. This lets the dashboard be browsed without signing in.
-  const isDemo = !accessToken;
+  const [auth, setAuth] = useState<AuthSession | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const isDemo = !auth?.authenticated;
 
   const [timeRange, setTimeRange] = useState<TimeRange>("medium_term");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(
@@ -80,10 +77,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch the real analytics summary when (and only when) the user is
-  // signed in. In demo mode, the placeholder summary is used directly.
+  // Check session state from backend-owned auth service.
   useEffect(() => {
-    if (!accessToken) {
+    let cancelled = false;
+    authApi
+      .session()
+      .then((session) => {
+        if (cancelled) return;
+        setAuth(session);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAuth({ authenticated: false });
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch real analytics only when authenticated. Demo mode uses placeholders.
+  useEffect(() => {
+    if (!auth?.authenticated) {
       setSummary(placeholderSummary);
       return;
     }
@@ -91,7 +109,7 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     analyticsApi
-      .summary(accessToken, timeRange)
+      .summary(timeRange)
       .then((data) => {
         if (!cancelled) setSummary(data);
       })
@@ -104,7 +122,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, timeRange]);
+  }, [auth?.authenticated, timeRange]);
 
   const initial = useMemo(
     () => summary?.profile.display_name?.[0]?.toUpperCase() ?? "?",
@@ -144,7 +162,7 @@ export default function DashboardPage() {
     };
   }, [summary]);
 
-  if (status === "loading") {
+  if (authLoading) {
     return <div className="loading">Loading session…</div>;
   }
 
@@ -165,7 +183,9 @@ export default function DashboardPage() {
             <button
               className="btn-ghost"
               style={{ marginLeft: 8 }}
-              onClick={() => signIn("spotify", { callbackUrl: "/dashboard" })}
+              onClick={() => {
+                window.location.href = authApi.loginUrl;
+              }}
             >
               Sign in
             </button>
@@ -173,7 +193,13 @@ export default function DashboardPage() {
             <button
               className="btn-ghost"
               style={{ marginLeft: 8 }}
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => {
+                authApi
+                  .logout()
+                  .finally(() => {
+                    window.location.href = "/";
+                  });
+              }}
             >
               Sign out
             </button>
@@ -185,12 +211,6 @@ export default function DashboardPage() {
         <div className="banner">
           <strong>Demo mode.</strong> You're viewing example data. Sign in
           with Spotify to see your own listening history.
-        </div>
-      )}
-
-      {sessionError === "RefreshAccessTokenError" && (
-        <div className="error">
-          Your Spotify session expired. Please sign out and sign in again.
         </div>
       )}
 

@@ -1,5 +1,9 @@
 # OAuth Architecture: Why Spotify Credentials Live in the Next.js Project
 
+> Superseded on 2026-04-14 by Ballerina-owned auth.
+> See `docs/ballerina-auth-migration-plan.md` and
+> `docs/ballerina-auth-migration-cross-reference.md` for the current architecture.
+
 ## TL;DR
 
 `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are defined in the Next.js

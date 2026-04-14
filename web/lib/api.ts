@@ -1,9 +1,10 @@
-// Typed client for the Ballerina analytics service.
+// Typed client for the Ballerina backend.
 //
-// Every call forwards the user's Spotify access token (obtained via NextAuth)
-// as a Bearer credential. The backend forwards it on to Spotify.
+// Authentication is cookie-based and owned by Ballerina. The frontend calls
+// auth and analytics endpoints with `credentials: include`.
 
-const BASE = process.env.NEXT_PUBLIC_ANALYTICS_API ?? "http://localhost:8080/analytics";
+const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_BASE ?? "http://localhost:8080";
+const ANALYTICS_BASE = process.env.NEXT_PUBLIC_ANALYTICS_API ?? `${BACKEND_BASE}/analytics`;
 
 export type SpotifyImage = { url: string; height?: number; width?: number };
 export type SpotifyArtistRef = { id: string; name: string };
@@ -48,17 +49,16 @@ export type AnalyticsSummary = {
 
 export type TimeRange = "short_term" | "medium_term" | "long_term";
 
-async function call<T>(
-  path: string,
-  accessToken: string,
-  init?: RequestInit
-): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+export type AuthSession = {
+  authenticated: boolean;
+  profile?: UserProfile;
+};
+
+async function call<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${ANALYTICS_BASE}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      ...(init?.headers ?? {})
-    },
+    credentials: "include",
+    headers: { ...(init?.headers ?? {}) },
     cache: "no-store"
   });
   if (!res.ok) {
@@ -68,14 +68,34 @@ async function call<T>(
   return res.json() as Promise<T>;
 }
 
+async function authCall<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BACKEND_BASE}${path}`, {
+    ...init,
+    credentials: "include",
+    headers: { ...(init?.headers ?? {}) },
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`auth ${path} failed: ${res.status} ${body}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const analyticsApi = {
-  summary: (token: string, timeRange: TimeRange = "medium_term") =>
-    call<AnalyticsSummary>(`/summary?timeRange=${timeRange}`, token),
-  profile: (token: string) => call<UserProfile>(`/profile`, token),
-  topArtists: (token: string, timeRange: TimeRange = "medium_term", limit = 20) =>
-    call<SpotifyArtist[]>(`/top-artists?timeRange=${timeRange}&limit=${limit}`, token),
-  topTracks: (token: string, timeRange: TimeRange = "medium_term", limit = 20) =>
-    call<SpotifyTrack[]>(`/top-tracks?timeRange=${timeRange}&limit=${limit}`, token),
-  recentlyPlayed: (token: string, limit = 20) =>
-    call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`, token)
+  summary: (timeRange: TimeRange = "medium_term") =>
+    call<AnalyticsSummary>(`/summary?timeRange=${timeRange}`),
+  profile: () => call<UserProfile>(`/profile`),
+  topArtists: (timeRange: TimeRange = "medium_term", limit = 20) =>
+    call<SpotifyArtist[]>(`/top-artists?timeRange=${timeRange}&limit=${limit}`),
+  topTracks: (timeRange: TimeRange = "medium_term", limit = 20) =>
+    call<SpotifyTrack[]>(`/top-tracks?timeRange=${timeRange}&limit=${limit}`),
+  recentlyPlayed: (limit = 20) =>
+    call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`)
+};
+
+export const authApi = {
+  loginUrl: `${BACKEND_BASE}/auth/login`,
+  session: () => authCall<AuthSession>(`/auth/session`),
+  logout: () => authCall<{ authenticated: boolean }>(`/auth/logout`, { method: "POST" })
 };

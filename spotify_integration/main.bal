@@ -1,17 +1,16 @@
 import ballerina/http;
 import ballerina/log;
 
-// REST API exposing the Spotify analytics.
+// REST API exposing Spotify analytics.
 //
-// Each request must carry the end-user's Spotify OAuth access token in the
-// standard `Authorization: Bearer <token>` header. The Next.js frontend
-// obtains that token via "Sign in with Spotify" (NextAuth) and forwards it
-// here on every call.
+// Authentication supports both:
+// 1) Ballerina-managed auth cookie (preferred for static frontend hosting), and
+// 2) Authorization: Bearer <token> header (backward compatibility).
 @http:ServiceConfig {
     cors: {
         allowOrigins: [allowedOrigin],
-        allowCredentials: false,
-        allowHeaders: ["Authorization", "Content-Type"],
+        allowCredentials: true,
+        allowHeaders: ["Authorization", "Content-Type", "Cookie"],
         allowMethods: ["GET", "OPTIONS"]
     }
 }
@@ -23,9 +22,10 @@ service /analytics on new http:Listener(servicePort) {
     }
 
     // Authenticated user's profile.
-    resource function get profile(@http:Header {name: "Authorization"} string? authorization)
+    resource function get profile(@http:Header {name: "Authorization"} string? authorization,
+            @http:Header {name: "Cookie"} string? cookieHeader)
             returns UserProfile|http:Unauthorized|http:InternalServerError {
-        string|http:Unauthorized token = extractBearer(authorization);
+        string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
             return token;
         }
@@ -39,9 +39,10 @@ service /analytics on new http:Listener(servicePort) {
 
     // Top artists. timeRange ∈ short_term | medium_term | long_term
     resource function get top\-artists(@http:Header {name: "Authorization"} string? authorization,
+            @http:Header {name: "Cookie"} string? cookieHeader,
             string timeRange = "medium_term", int 'limit = 20)
             returns SpotifyArtist[]|http:Unauthorized|http:InternalServerError {
-        string|http:Unauthorized token = extractBearer(authorization);
+        string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
             return token;
         }
@@ -55,9 +56,10 @@ service /analytics on new http:Listener(servicePort) {
 
     // Top tracks.
     resource function get top\-tracks(@http:Header {name: "Authorization"} string? authorization,
+            @http:Header {name: "Cookie"} string? cookieHeader,
             string timeRange = "medium_term", int 'limit = 20)
             returns SpotifyTrack[]|http:Unauthorized|http:InternalServerError {
-        string|http:Unauthorized token = extractBearer(authorization);
+        string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
             return token;
         }
@@ -71,9 +73,10 @@ service /analytics on new http:Listener(servicePort) {
 
     // Recently played tracks.
     resource function get recently\-played(@http:Header {name: "Authorization"} string? authorization,
+            @http:Header {name: "Cookie"} string? cookieHeader,
             int 'limit = 20)
             returns PlayHistoryItem[]|http:Unauthorized|http:InternalServerError {
-        string|http:Unauthorized token = extractBearer(authorization);
+        string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
             return token;
         }
@@ -87,9 +90,10 @@ service /analytics on new http:Listener(servicePort) {
 
     // Aggregated analytics summary - one call to fetch everything.
     resource function get summary(@http:Header {name: "Authorization"} string? authorization,
+            @http:Header {name: "Cookie"} string? cookieHeader,
             string timeRange = "medium_term")
             returns AnalyticsSummary|http:Unauthorized|http:InternalServerError {
-        string|http:Unauthorized token = extractBearer(authorization);
+        string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
             return token;
         }
@@ -100,6 +104,14 @@ service /analytics on new http:Listener(servicePort) {
         }
         return result;
     }
+}
+
+isolated function resolveAccessToken(string? authorization, string? cookieHeader) returns string|http:Unauthorized {
+    string|http:Unauthorized fromHeader = extractBearer(authorization);
+    if fromHeader is string {
+        return fromHeader;
+    }
+    return extractTokenFromCookie(cookieHeader);
 }
 
 // Pulls a Bearer token out of the Authorization header.

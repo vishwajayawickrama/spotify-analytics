@@ -8,3 +8,6 @@ import ballerina/http;
 // Authorization header. The functions in functions.bal forward that token
 // directly to Spotify as a Bearer credential.
 final http:Client spotifyClient = check new (spotifyApiUrl);
+
+// HTTP client for Spotify Accounts service (OAuth authorize/token endpoints).
+final http:Client spotifyAccountsClient = check new (spotifyAccountsApiUrl);

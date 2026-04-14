@@ -52,6 +52,11 @@ public type AnalyticsSummary record {
     decimal averageTrackPopularity;
 };
 
+public type AuthSession record {
+    boolean authenticated;
+    UserProfile? profile = ();
+};
+
 public type ErrorResponse record {|
     string message;
     int? status = ();

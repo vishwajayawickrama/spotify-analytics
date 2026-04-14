@@ -1,17 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { authApi } from "@/lib/api";
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
-    if (status === "authenticated") router.replace("/dashboard");
-  }, [status, router]);
+    let cancelled = false;
+    authApi
+      .session()
+      .then((s) => {
+        if (cancelled) return;
+        if (s.authenticated) {
+          setStatus("authenticated");
+          router.replace("/dashboard");
+          return;
+        }
+        setStatus("unauthenticated");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("unauthenticated");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   return (
     <div className="signin-screen">
@@ -33,7 +51,9 @@ export default function HomePage() {
         <div className="signin-actions">
           <button
             className="btn"
-            onClick={() => signIn("spotify", { callbackUrl: "/dashboard" })}
+            onClick={() => {
+              window.location.href = authApi.loginUrl;
+            }}
             disabled={status === "loading"}
           >
             {status === "loading" ? "Loading…" : "Sign in with Spotify"}
