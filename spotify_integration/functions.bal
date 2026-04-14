@@ -16,8 +16,11 @@ public isolated function fetchTopArtists(string accessToken, string timeRange = 
     string path = string `/me/top/artists?time_range=${timeRange}&limit=${'limit}`;
     json payload = check spotifyClient->get(path, authHeaders(accessToken));
     json[] items = check extractItems(payload);
-    return from json item in items
-        select check toSpotifyArtist(item);
+    SpotifyArtist[] artists = [];
+    foreach json item in items {
+        artists.push(check toSpotifyArtist(item));
+    }
+    return artists;
 }
 
 public isolated function fetchTopTracks(string accessToken, string timeRange = "medium_term", int 'limit = 20)
@@ -25,8 +28,11 @@ public isolated function fetchTopTracks(string accessToken, string timeRange = "
     string path = string `/me/top/tracks?time_range=${timeRange}&limit=${'limit}`;
     json payload = check spotifyClient->get(path, authHeaders(accessToken));
     json[] items = check extractItems(payload);
-    return from json item in items
-        select check toSpotifyTrack(item);
+    SpotifyTrack[] tracks = [];
+    foreach json item in items {
+        tracks.push(check toSpotifyTrack(item));
+    }
+    return tracks;
 }
 
 public isolated function fetchRecentlyPlayed(string accessToken, int 'limit = 20)

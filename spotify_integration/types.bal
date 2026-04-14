@@ -26,6 +26,7 @@ public type SpotifyTrack record {
     int popularity = 0;
     int duration_ms = 0;
     string album = "";
+    SpotifyImage[] albumImages = [];
     SpotifyArtistRef[] artists = [];
 };
 

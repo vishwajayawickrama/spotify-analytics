@@ -22,16 +22,42 @@ isolated function toSpotifyImages(json imagesJson) returns SpotifyImage[]|error 
 
 isolated function toSpotifyArtist(json payload) returns SpotifyArtist|error {
     map<json> m = check payload.ensureType();
-    map<json> followersMap = check m["followers"].ensureType();
-    json[] genresJson = check m["genres"].ensureType();
+    int followers = 0;
+    if m.hasKey("followers") {
+        json followersJson = m["followers"];
+        if followersJson is map<json> {
+            map<json> followersMap = followersJson;
+            if followersMap.hasKey("total") {
+                followers = check followersMap["total"].ensureType(int);
+            }
+        }
+    }
+
+    string[] genres = [];
+    if m.hasKey("genres") {
+        json genresJson = m["genres"];
+        if genresJson is json[] {
+            foreach json g in genresJson {
+                genres.push(check g.ensureType(string));
+            }
+        }
+    }
+
+    SpotifyImage[] images = [];
+    if m.hasKey("images") {
+        json imagesJson = m["images"];
+        if imagesJson is json[] {
+            images = check toSpotifyImages(imagesJson);
+        }
+    }
+
     return {
         id: check m["id"].ensureType(string),
         name: check m["name"].ensureType(string),
-        genres: from json g in genresJson
-            select check g.ensureType(string),
-        popularity: check m["popularity"].ensureType(int),
-        followers: check followersMap["total"].ensureType(int),
-        images: check toSpotifyImages(m["images"])
+        genres,
+        popularity: m.hasKey("popularity") && m["popularity"] != () ? check m["popularity"].ensureType(int) : 0,
+        followers,
+        images
     };
 }
 
@@ -39,17 +65,36 @@ isolated function toSpotifyTrack(json payload) returns SpotifyTrack|error {
     map<json> m = check payload.ensureType();
     map<json> albumMap = check m["album"].ensureType();
     json[] artistsJson = check m["artists"].ensureType();
+    SpotifyImage[] albumImages = [];
+    if albumMap.hasKey("images") {
+        json albumImagesJson = albumMap["images"];
+        if albumImagesJson is json[] {
+            albumImages = check toSpotifyImages(albumImagesJson);
+        }
+    }
+    string trackId = "";
+    if m.hasKey("id") {
+        json idJson = m["id"];
+        if idJson is string {
+            trackId = idJson;
+        }
+    }
+    if trackId.length() == 0 {
+        // Local/unavailable tracks can omit/null id in some payloads.
+        trackId = check m["name"].ensureType(string);
+    }
     return {
-        id: check m["id"].ensureType(string),
+        id: trackId,
         name: check m["name"].ensureType(string),
         popularity: m.hasKey("popularity") ? check m["popularity"].ensureType(int) : 0,
         duration_ms: check m["duration_ms"].ensureType(int),
         album: check albumMap["name"].ensureType(string),
+        albumImages,
         artists: from json a in artistsJson
-            let map<json> am = checkpanic a.ensureType()
+            let map<json> am = check a.ensureType()
             select {
-                id: checkpanic am["id"].ensureType(string),
-                name: checkpanic am["name"].ensureType(string)
+                id: am.hasKey("id") ? check am["id"].ensureType(string) : "",
+                name: am.hasKey("name") ? check am["name"].ensureType(string) : "Unknown artist"
             }
     };
 }
@@ -58,10 +103,10 @@ isolated function toRecentlyPlayed(json payload) returns PlayHistoryItem[]|error
     map<json> m = check payload.ensureType();
     json[] items = check m["items"].ensureType();
     return from json item in items
-        let map<json> im = checkpanic item.ensureType()
+        let map<json> im = check item.ensureType()
         select {
-            played_at: checkpanic im["played_at"].ensureType(string),
-            track: checkpanic toSpotifyTrack(im["track"])
+            played_at: im.hasKey("played_at") ? check im["played_at"].ensureType(string) : "",
+            track: check toSpotifyTrack(im["track"])
         };
 }
 

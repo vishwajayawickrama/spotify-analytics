@@ -24,6 +24,7 @@ export type SpotifyTrack = {
   popularity: number;
   duration_ms: number;
   album: string;
+  albumImages: SpotifyImage[];
   artists: SpotifyArtistRef[];
 };
 

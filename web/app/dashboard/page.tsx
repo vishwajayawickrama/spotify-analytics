@@ -45,13 +45,31 @@ function formatNumber(n: number) {
 // Square block used as a stand-in for album / artist art when no real
 // image URL is available. Uses a deterministic gradient + initials so the
 // demo dashboard renders cleanly without external requests.
-function ArtBlock({ seed, size = 56 }: { seed: string; size?: number }) {
+function ArtBlock({
+  seed,
+  size = 56,
+  imageUrl
+}: {
+  seed: string;
+  size?: number;
+  imageUrl?: string;
+}) {
   const initials = seed
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
+  if (imageUrl) {
+    return (
+      <img
+        className="art-block"
+        src={imageUrl}
+        alt={seed}
+        style={{ width: size, height: size, objectFit: "cover" }}
+      />
+    );
+  }
   return (
     <div
       className="art-block"
@@ -64,6 +82,12 @@ function ArtBlock({ seed, size = 56 }: { seed: string; size?: number }) {
       {initials}
     </div>
   );
+}
+
+function pickImage(images: { url: string; width?: number; height?: number }[] | undefined, target = 56) {
+  if (!images || images.length === 0) return undefined;
+  const sorted = [...images].sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+  return (sorted.find((im) => (im.width ?? 0) >= target) ?? sorted[sorted.length - 1]).url;
 }
 
 export default function DashboardPage() {
@@ -406,7 +430,7 @@ export default function DashboardPage() {
                 {summary.topTracks.map((t, i) => (
                   <div className="list-row track-row" key={t.id}>
                     <div className="index">{String(i + 1).padStart(2, "0")}</div>
-                    <ArtBlock seed={t.album || t.name} />
+                    <ArtBlock seed={t.album || t.name} imageUrl={pickImage(t.albumImages)} />
                     <div className="track-info">
                       <div className="title">{t.name}</div>
                       <div className="subtitle">
@@ -430,7 +454,7 @@ export default function DashboardPage() {
               {summary.recentlyPlayed.map((p, i) => (
                 <div className="list-row track-row" key={`${p.track.id}-${p.played_at}`}>
                   <div className="index">{String(i + 1).padStart(2, "0")}</div>
-                  <ArtBlock seed={p.track.album || p.track.name} />
+                  <ArtBlock seed={p.track.album || p.track.name} imageUrl={pickImage(p.track.albumImages)} />
                   <div className="track-info">
                     <div className="title">{p.track.name}</div>
                     <div className="subtitle">
