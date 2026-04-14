@@ -9,6 +9,12 @@ export default function HomePage() {
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
+    const token = window.sessionStorage.getItem("spotify_access_token");
+    if (token) {
+      router.replace("/dashboard");
+      return;
+    }
+
     let cancelled = false;
     authApi
       .session()

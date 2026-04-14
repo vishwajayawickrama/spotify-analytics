@@ -69,6 +69,7 @@ function ArtBlock({ seed, size = 56 }: { seed: string; size?: number }) {
 export default function DashboardPage() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthSession | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   const [timeRange, setTimeRange] = useState<TimeRange>("medium_term");
@@ -76,8 +77,30 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check session state from backend-owned auth service.
+  // Resolve auth from URL hash/sessionStorage first, then fall back to cookie session.
   useEffect(() => {
+    const hash = window.location.hash.startsWith("#")
+      ? window.location.hash.substring(1)
+      : "";
+    const params = new URLSearchParams(hash);
+    const tokenFromHash = params.get("access_token");
+    if (tokenFromHash) {
+      window.sessionStorage.setItem("spotify_access_token", tokenFromHash);
+      setAccessToken(tokenFromHash);
+      setAuth({ authenticated: true });
+      setAuthLoading(false);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      return;
+    }
+
+    const tokenFromStorage = window.sessionStorage.getItem("spotify_access_token");
+    if (tokenFromStorage) {
+      setAccessToken(tokenFromStorage);
+      setAuth({ authenticated: true });
+      setAuthLoading(false);
+      return;
+    }
+
     let cancelled = false;
     authApi
       .session()
@@ -100,7 +123,7 @@ export default function DashboardPage() {
 
   // Fetch analytics only when authenticated.
   useEffect(() => {
-    if (!auth?.authenticated) {
+    if (!auth?.authenticated && !accessToken) {
       setSummary(null);
       setLoading(false);
       return;
@@ -109,12 +132,19 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     analyticsApi
-      .summary(timeRange)
+      .summary(timeRange, accessToken ?? undefined)
       .then((data) => {
         if (!cancelled) setSummary(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message ?? String(err));
+        if (!cancelled) {
+          setError(err.message ?? String(err));
+          if (accessToken) {
+            window.sessionStorage.removeItem("spotify_access_token");
+            setAccessToken(null);
+            setAuth({ authenticated: false });
+          }
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -122,7 +152,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, timeRange]);
+  }, [auth?.authenticated, accessToken, timeRange]);
 
   const initial = useMemo(
     () => summary?.profile.display_name?.[0]?.toUpperCase() ?? "?",
@@ -166,7 +196,7 @@ export default function DashboardPage() {
     return <div className="loading">Loading session…</div>;
   }
 
-  if (!auth?.authenticated) {
+  if (!auth?.authenticated && !accessToken) {
     return (
       <div className="signin-screen">
         <div className="aurora" aria-hidden />
@@ -203,11 +233,13 @@ export default function DashboardPage() {
         </div>
         <div className="user-chip">
           <div className="avatar">{initial}</div>
-          <span>{summary?.profile.display_name ?? auth.profile?.display_name ?? "…"}</span>
+          <span>{summary?.profile.display_name ?? auth?.profile?.display_name ?? "…"}</span>
           <button
             className="btn-ghost"
             style={{ marginLeft: 8 }}
             onClick={() => {
+              window.sessionStorage.removeItem("spotify_access_token");
+              setAccessToken(null);
               authApi
                 .logout()
                 .finally(() => {

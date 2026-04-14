@@ -83,8 +83,10 @@ async function authCall<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const analyticsApi = {
-  summary: (timeRange: TimeRange = "medium_term") =>
-    call<AnalyticsSummary>(`/summary?timeRange=${timeRange}`),
+  summary: (timeRange: TimeRange = "medium_term", accessToken?: string) =>
+    call<AnalyticsSummary>(`/summary?timeRange=${timeRange}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    }),
   profile: () => call<UserProfile>(`/profile`),
   topArtists: (timeRange: TimeRange = "medium_term", limit = 20) =>
     call<SpotifyArtist[]>(`/top-artists?timeRange=${timeRange}&limit=${limit}`),

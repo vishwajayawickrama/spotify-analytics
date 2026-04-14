@@ -15,7 +15,8 @@ service /auth on apiListener {
     }
 
     // Handles Spotify callback, exchanges authorization code for tokens,
-    // stores the access token in an HttpOnly cookie, and redirects to UI.
+    // stores the access token in a cookie, and redirects to UI with a
+    // hash-fragment token fallback for browsers that block third-party cookies.
     resource function get callback(string code = "") returns http:Response|http:BadRequest {
         if code.length() == 0 {
             return <http:BadRequest>{body: {message: "missing OAuth code"}};
@@ -26,7 +27,9 @@ service /auth on apiListener {
             return buildRedirectResponse(string `${frontendBaseUrl}/?authError=token_exchange_failed`);
         }
 
-        http:Response response = buildRedirectResponse(string `${frontendBaseUrl}/dashboard`);
+        http:Response response = buildRedirectResponse(
+            string `${frontendBaseUrl}/dashboard#access_token=${accessTokenResult}`
+        );
         response.setHeader("Set-Cookie", buildSessionCookie(accessTokenResult, false));
         return response;
     }
@@ -78,10 +81,13 @@ isolated function exchangeCodeForAccessToken(string code) returns string|error {
 
 isolated function buildSessionCookie(string token, boolean expireNow) returns string {
     string secure = frontendBaseUrl.startsWith("https://") ? "; Secure" : "";
+    // Partitioned cookies improve compatibility for cross-site auth flows,
+    // such as github.io frontend calling an ngrok backend.
+    string partitioned = frontendBaseUrl.startsWith("https://") ? "; Partitioned" : "";
     if expireNow {
-        return string `${sessionCookieName}=; Path=/; HttpOnly; SameSite=None; Max-Age=0${secure}`;
+        return string `${sessionCookieName}=; Path=/; HttpOnly; SameSite=None; Max-Age=0${secure}${partitioned}`;
     }
-    return string `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=None; Max-Age=3600${secure}`;
+    return string `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=None; Max-Age=3600${secure}${partitioned}`;
 }
 
 isolated function buildRedirectResponse(string location) returns http:Response {
