@@ -70,6 +70,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [useTokenFallback, setUseTokenFallback] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
   const [timeRange, setTimeRange] = useState<TimeRange>("medium_term");
@@ -77,29 +78,25 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Resolve auth from URL hash/sessionStorage first, then fall back to cookie session.
+  // Resolve auth from cookie session first. Use token fallback only if
+  // session cookies are blocked/unavailable.
   useEffect(() => {
     const hash = window.location.hash.startsWith("#")
       ? window.location.hash.substring(1)
       : "";
     const params = new URLSearchParams(hash);
     const tokenFromHash = params.get("access_token");
+    let fallbackToken: string | null = null;
     if (tokenFromHash) {
       window.sessionStorage.setItem("spotify_access_token", tokenFromHash);
-      setAccessToken(tokenFromHash);
-      setAuth({ authenticated: true });
-      setAuthLoading(false);
+      fallbackToken = tokenFromHash;
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
-      return;
     }
 
-    const tokenFromStorage = window.sessionStorage.getItem("spotify_access_token");
-    if (tokenFromStorage) {
-      setAccessToken(tokenFromStorage);
-      setAuth({ authenticated: true });
-      setAuthLoading(false);
-      return;
+    if (!fallbackToken) {
+      fallbackToken = window.sessionStorage.getItem("spotify_access_token");
     }
+    setAccessToken(fallbackToken);
 
     let cancelled = false;
     authApi
@@ -107,10 +104,17 @@ export default function DashboardPage() {
       .then((session) => {
         if (cancelled) return;
         setAuth(session);
+        setUseTokenFallback(false);
       })
       .catch(() => {
         if (cancelled) return;
+        if (fallbackToken) {
+          setAuth({ authenticated: true });
+          setUseTokenFallback(true);
+          return;
+        }
         setAuth({ authenticated: false });
+        setUseTokenFallback(false);
       })
       .finally(() => {
         if (!cancelled) setAuthLoading(false);
@@ -131,8 +135,9 @@ export default function DashboardPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    const tokenForApi = useTokenFallback ? accessToken ?? undefined : undefined;
     analyticsApi
-      .summary(timeRange, accessToken ?? undefined)
+      .summary(timeRange, tokenForApi)
       .then((data) => {
         if (!cancelled) setSummary(data);
       })
@@ -143,6 +148,7 @@ export default function DashboardPage() {
             window.sessionStorage.removeItem("spotify_access_token");
             setAccessToken(null);
             setAuth({ authenticated: false });
+            setUseTokenFallback(false);
           }
         }
       })
@@ -152,7 +158,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, accessToken, timeRange]);
+  }, [auth?.authenticated, accessToken, useTokenFallback, timeRange]);
 
   const initial = useMemo(
     () => summary?.profile.display_name?.[0]?.toUpperCase() ?? "?",
@@ -240,6 +246,7 @@ export default function DashboardPage() {
             onClick={() => {
               window.sessionStorage.removeItem("spotify_access_token");
               setAccessToken(null);
+              setUseTokenFallback(false);
               authApi
                 .logout()
                 .finally(() => {
