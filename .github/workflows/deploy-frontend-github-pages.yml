@@ -40,6 +40,8 @@ jobs:
 
       - name: Build static site
         working-directory: web
+        env:
+          NEXT_PUBLIC_BACKEND_BASE: ${{ vars.BACKEND_BASE_URL }}
         run: npm run build
 
       - name: Upload artifact

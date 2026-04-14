@@ -11,3 +11,6 @@ final http:Client spotifyClient = check new (spotifyApiUrl);
 
 // HTTP client for Spotify Accounts service (OAuth authorize/token endpoints).
 final http:Client spotifyAccountsClient = check new (spotifyAccountsApiUrl);
+
+// Shared listener for the auth and analytics services.
+listener http:Listener apiListener = new (servicePort);

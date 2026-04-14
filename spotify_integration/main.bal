@@ -14,7 +14,7 @@ import ballerina/log;
         allowMethods: ["GET", "OPTIONS"]
     }
 }
-service /analytics on new http:Listener(servicePort) {
+service /analytics on apiListener {
 
     // Health check.
     resource function get health() returns record {|string status;|} {

@@ -3,8 +3,8 @@
 // Authentication is cookie-based and owned by Ballerina. The frontend calls
 // auth and analytics endpoints with `credentials: include`.
 
-const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_BASE ?? "http://localhost:8080";
-const ANALYTICS_BASE = process.env.NEXT_PUBLIC_ANALYTICS_API ?? `${BACKEND_BASE}/analytics`;
+const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_BASE || "http://localhost:8080";
+const ANALYTICS_BASE = process.env.NEXT_PUBLIC_ANALYTICS_API || `${BACKEND_BASE}/analytics`;
 
 export type SpotifyImage = { url: string; height?: number; width?: number };
 export type SpotifyArtistRef = { id: string; name: string };

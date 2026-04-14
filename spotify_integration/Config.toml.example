@@ -1,4 +1,5 @@
 # Ballerina configurable values for the spotify_integration service.
+# LOCAL DEVELOPMENT profile.
 # Copy to `Config.toml` and adjust as needed. See:
 # https://ballerina.io/learn/provide-values-to-configurable-variables/
 
@@ -17,7 +18,9 @@ allowedOrigin = "http://localhost:3000"
 frontendBaseUrl = "http://localhost:3000"
 
 # Spotify callback URL handled by this Ballerina service.
-oauthCallbackUrl = "http://localhost:8080/auth/callback"
+oauthCallbackUrl = "http://127.0.0.1:8080/auth/callback"
 
 # Cookie name for backend-managed auth session.
 sessionCookieName = "spotify_access_token"
+
+# For production values, use `Config.production.toml.example`.

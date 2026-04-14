@@ -1,0 +1,23 @@
+# Ballerina configurable values for the spotify_integration service.
+# PRODUCTION profile for GitHub Pages frontend + hosted backend.
+# Copy to `Config.toml` on your deployed backend and set real values.
+
+spotifyApiUrl = "https://api.spotify.com/v1"
+spotifyAccountsApiUrl = "https://accounts.spotify.com"
+
+spotifyClientId = "<spotify-client-id>"
+spotifyClientSecret = "<spotify-client-secret>"
+
+servicePort = 8080
+
+# CORS origin must be the frontend origin only (no repo path).
+allowedOrigin = "https://vishwajayawickrama.github.io"
+
+# Redirect target after successful login.
+frontendBaseUrl = "https://vishwajayawickrama.github.io/spotify-analytics"
+
+# This callback must be registered in Spotify app settings exactly.
+oauthCallbackUrl = "https://<your-backend-domain>/auth/callback"
+
+# Cookie name for backend-managed auth session.
+sessionCookieName = "spotify_access_token"

@@ -3,7 +3,7 @@ import ballerina/http;
 // Spotify scopes needed by the analytics dashboard.
 const string SPOTIFY_SCOPES = "user-read-email%20user-read-private%20user-top-read%20user-read-recently-played";
 
-service /auth on new http:Listener(servicePort) {
+service /auth on apiListener {
 
     // Starts OAuth by redirecting the browser to Spotify's authorize page.
     resource function get login() returns http:Response {
