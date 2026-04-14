@@ -1,6 +1,7 @@
 name: Deploy Frontend to GitHub Pages
 
 env:
+  # TODO: Move this to a GitHub Actions variable/secret (for example vars.BACKEND_BASE_URL).
   BACKEND_BASE_URL: https://overturnable-zahra-semibleached.ngrok-free.dev
 
 on:
