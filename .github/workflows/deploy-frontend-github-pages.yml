@@ -42,9 +42,7 @@ jobs:
 
       - name: Build static site
         working-directory: web
-        run: |
-          npm run build
-          npx next export
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
