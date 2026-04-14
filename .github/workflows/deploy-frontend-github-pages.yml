@@ -1,5 +1,8 @@
 name: Deploy Frontend to GitHub Pages
 
+env:
+  BACKEND_BASE_URL: https://overturnable-zahra-semibleached.ngrok-free.dev
+
 on:
   push:
     branches: ["main"]
@@ -41,7 +44,7 @@ jobs:
       - name: Build static site
         working-directory: web
         env:
-          NEXT_PUBLIC_BACKEND_BASE: ${{ vars.BACKEND_BASE_URL }}
+          NEXT_PUBLIC_BACKEND_BASE: ${{ env.BACKEND_BASE_URL }}
         run: npm run build
 
       - name: Upload artifact

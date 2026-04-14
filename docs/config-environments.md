@@ -30,6 +30,12 @@ frontendBaseUrl = "https://vishwajayawickrama.github.io/spotify-analytics"
 oauthCallbackUrl = "https://<your-backend-domain>/auth/callback"
 ```
 
+Current temporary tunnel example:
+
+```toml
+oauthCallbackUrl = "https://overturnable-zahra-semibleached.ngrok-free.dev/auth/callback"
+```
+
 Notes:
 
 - `allowedOrigin` must be the origin only, without the repo path.
@@ -38,6 +44,7 @@ Notes:
 - The GitHub Actions workflow expects a repository variable named `BACKEND_BASE_URL`.
 - Set `BACKEND_BASE_URL` to your public backend root, for example `https://your-backend-domain`.
 - The workflow passes this value to `NEXT_PUBLIC_BACKEND_BASE` at build time.
+- For the current tunnel setup, set `BACKEND_BASE_URL` to `https://overturnable-zahra-semibleached.ngrok-free.dev`.
 
 ## Reminder
 

@@ -17,7 +17,7 @@ allowedOrigin = "https://vishwajayawickrama.github.io"
 frontendBaseUrl = "https://vishwajayawickrama.github.io/spotify-analytics"
 
 # This callback must be registered in Spotify app settings exactly.
-oauthCallbackUrl = "https://<your-backend-domain>/auth/callback"
+oauthCallbackUrl = "https://overturnable-zahra-semibleached.ngrok-free.dev/auth/callback"
 
 # Cookie name for backend-managed auth session.
 sessionCookieName = "spotify_access_token"
