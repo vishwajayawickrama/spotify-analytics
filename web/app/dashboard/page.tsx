@@ -9,7 +9,7 @@ import {
   type AnalyticsSummary,
   type TimeRange
 } from "@/lib/api";
-import { gradientFor, placeholderSummary } from "@/lib/placeholderData";
+import { gradientFor } from "@/lib/placeholderData";
 
 const TIME_RANGES: { value: TimeRange; label: string }[] = [
   { value: "short_term", label: "Last 4 weeks" },
@@ -70,12 +70,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const isDemo = !auth?.authenticated;
 
   const [timeRange, setTimeRange] = useState<TimeRange>("medium_term");
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(
-    isDemo ? placeholderSummary : null
-  );
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,10 +98,11 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Fetch real analytics only when authenticated. Demo mode uses placeholders.
+  // Fetch analytics only when authenticated.
   useEffect(() => {
     if (!auth?.authenticated) {
-      setSummary(placeholderSummary);
+      setSummary(null);
+      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -168,6 +166,32 @@ export default function DashboardPage() {
     return <div className="loading">Loading session…</div>;
   }
 
+  if (!auth?.authenticated) {
+    return (
+      <div className="signin-screen">
+        <div className="aurora" aria-hidden />
+        <div className="signin-card">
+          <div className="signin-badge">
+            <span className="brand-dot" />
+            Spotify Analytics
+          </div>
+          <h1>Sign in required</h1>
+          <p>Authenticate with Spotify to access your listening analytics dashboard.</p>
+          <div className="signin-actions">
+            <button
+              className="btn"
+              onClick={() => {
+                window.location.href = authApi.loginUrl;
+              }}
+            >
+              Sign in with Spotify
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <div className="aurora aurora-soft" aria-hidden />
@@ -176,45 +200,25 @@ export default function DashboardPage() {
         <div className="brand">
           <span className="brand-dot" />
           Spotify Analytics
-          {isDemo && <span className="demo-pill">DEMO</span>}
         </div>
         <div className="user-chip">
           <div className="avatar">{initial}</div>
-          <span>{summary?.profile.display_name ?? "…"}</span>
-          {isDemo ? (
-            <button
-              className="btn-ghost"
-              style={{ marginLeft: 8 }}
-              onClick={() => {
-                window.location.href = authApi.loginUrl;
-              }}
-            >
-              Sign in
-            </button>
-          ) : (
-            <button
-              className="btn-ghost"
-              style={{ marginLeft: 8 }}
-              onClick={() => {
-                authApi
-                  .logout()
-                  .finally(() => {
-                    router.push("/");
-                  });
-              }}
-            >
-              Sign out
-            </button>
-          )}
+          <span>{summary?.profile.display_name ?? auth.profile?.display_name ?? "…"}</span>
+          <button
+            className="btn-ghost"
+            style={{ marginLeft: 8 }}
+            onClick={() => {
+              authApi
+                .logout()
+                .finally(() => {
+                  router.push("/");
+                });
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </header>
-
-      {isDemo && (
-        <div className="banner">
-          <strong>Demo mode.</strong> You're viewing example data. Sign in
-          with Spotify to see your own listening history.
-        </div>
-      )}
 
       <div className="controls">
         {TIME_RANGES.map((tr) => (
@@ -402,7 +406,7 @@ export default function DashboardPage() {
           </div>
 
           <footer className="footer">
-            Built with Next.js + Ballerina · {isDemo ? "Demo data" : "Live data via Spotify Web API"}
+            Built with Next.js + Ballerina · Live data via Spotify Web API
           </footer>
         </>
       )}

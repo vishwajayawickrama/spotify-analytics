@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
@@ -58,11 +57,8 @@ export default function HomePage() {
           >
             {status === "loading" ? "Loading…" : "Sign in with Spotify"}
           </button>
-          <Link href="/dashboard" className="btn-ghost btn-ghost-lg">
-            Try the demo →
-          </Link>
         </div>
-        <div className="signin-foot">No account needed for the demo</div>
+        <div className="signin-foot">Sign in to view your personalized dashboard.</div>
       </div>
     </div>
   );
