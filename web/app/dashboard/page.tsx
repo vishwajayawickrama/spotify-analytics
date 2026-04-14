@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   authApi,
   analyticsApi,
@@ -66,6 +67,7 @@ function ArtBlock({ seed, size = 56 }: { seed: string; size?: number }) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const isDemo = !auth?.authenticated;
@@ -197,7 +199,7 @@ export default function DashboardPage() {
                 authApi
                   .logout()
                   .finally(() => {
-                    window.location.href = "/";
+                    router.push("/");
                   });
               }}
             >
