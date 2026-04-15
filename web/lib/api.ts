@@ -107,7 +107,7 @@ export const analyticsApi = {
 };
 
 export const authApi = {
-  loginUrl: `${BACKEND_BASE}/auth/login`,
-  session: () => authCall<AuthSession>(`/auth/session`),
-  logout: () => authCall<{ authenticated: boolean }>(`/auth/logout`, { method: "POST" })
+  loginUrl: `${BACKEND_BASE}/login`,
+  session: () => authCall<AuthSession>(`/session`),
+  logout: () => authCall<{ authenticated: boolean }>(`/logout`, { method: "POST" })
 };
