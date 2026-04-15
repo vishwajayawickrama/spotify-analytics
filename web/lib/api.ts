@@ -58,7 +58,6 @@ export type AuthSession = {
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${ANALYTICS_BASE}${path}`, {
     ...init,
-    credentials: "include",
     headers: { ...(init?.headers ?? {}) },
     cache: "no-store"
   });
