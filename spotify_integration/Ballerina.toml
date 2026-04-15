@@ -2,7 +2,7 @@
 org = "vishwajayawickrama"
 name = "spotify_integration"
 version = "0.1.0"
-distribution = "2201.13.3"
+distribution = "2201.13.2"
 title = "spotify-integration"
 
 [build-options]
