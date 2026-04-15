@@ -1,6 +1,7 @@
 # OAuth Architecture: Why Spotify Credentials Live in the Next.js Project
 
 > Superseded on 2026-04-14 by Ballerina-owned auth.
+> Canonical current auth reference: `docs/auth-current-state-guide.md`.
 > See `docs/ballerina-auth-migration-plan.md` and
 > `docs/ballerina-auth-migration-cross-reference.md` for the current architecture.
 

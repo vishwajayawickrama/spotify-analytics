@@ -1,5 +1,7 @@
 # Config Environments
 
+> Canonical current auth reference: `docs/auth-current-state-guide.md`.
+
 This repo now uses two different sets of URLs depending on where the app is running.
 
 ## Local Development

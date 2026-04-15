@@ -3,6 +3,9 @@
 Date: 2026-04-14
 Source Plan: docs/ballerina-auth-migration-plan.md
 
+> Canonical current auth reference: `docs/auth-current-state-guide.md`.
+> This document is a migration traceability artifact.
+
 ## Plan vs Implementation
 
 1. Backend owns OAuth flow

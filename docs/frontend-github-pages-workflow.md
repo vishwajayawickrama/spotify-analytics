@@ -1,5 +1,8 @@
 # Frontend Hosting Workflow on GitHub Pages
 
+> Canonical current auth reference: `docs/auth-current-state-guide.md`.
+> Auth details in this document are historical deployment context.
+
 This document explains how the frontend in `web/` is deployed to GitHub Pages using GitHub Actions.
 
 ## 1. Current Deployment Architecture

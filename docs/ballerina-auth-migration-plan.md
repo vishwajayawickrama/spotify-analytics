@@ -3,6 +3,9 @@
 Date: 2026-04-14
 Status: Implemented (Phase 1)
 
+> Canonical current auth reference: `docs/auth-current-state-guide.md`.
+> This document is migration history and implementation planning context.
+
 ## Goal
 
 Move Spotify OAuth and session lifecycle fully into the Ballerina service so the Next.js frontend can be statically exported for GitHub Pages.
