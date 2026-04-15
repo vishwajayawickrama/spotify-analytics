@@ -1,8 +1,9 @@
 name: Deploy Frontend to GitHub Pages
 
 env:
-  # TODO: Move this to a GitHub Actions variable/secret (for example vars.BACKEND_BASE_URL).
-  BACKEND_BASE_URL: https://ec58c6af-699d-47f9-b160-e155e9dd5fed-dev.e1-us-east-azure.choreoapis.dev/spotify-analytics/spotifyintegration/v1.0
+  # TODO: Move these to GitHub Actions variables/secrets.
+  BACKEND_BASE_URL: https://ec58c6af-699d-47f9-b160-e155e9dd5fed-dev.e1-us-east-azure.choreoapis.dev/spotify-analytics/spotifyintegration/auth-476/v1.0
+  ANALYTICS_API_URL: https://ec58c6af-699d-47f9-b160-e155e9dd5fed-dev.e1-us-east-azure.choreoapis.dev/spotify-analytics/spotifyintegration/v1.0
 
 on:
   push:
@@ -46,6 +47,7 @@ jobs:
         working-directory: web
         env:
           NEXT_PUBLIC_BACKEND_BASE: ${{ env.BACKEND_BASE_URL }}
+          NEXT_PUBLIC_ANALYTICS_API: ${{ env.ANALYTICS_API_URL }}
         run: npm run build
 
       - name: Upload artifact

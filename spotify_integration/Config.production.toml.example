@@ -17,7 +17,7 @@ allowedOrigin = "https://vishwajayawickrama.github.io"
 frontendBaseUrl = "https://vishwajayawickrama.github.io/spotify-analytics"
 
 # This callback must be registered in Spotify app settings exactly.
-oauthCallbackUrl = "https://ec58c6af-699d-47f9-b160-e155e9dd5fed-dev.e1-us-east-azure.choreoapis.dev/spotify-analytics/spotifyintegration/v1.0/auth/callback"
+oauthCallbackUrl = "https://ec58c6af-699d-47f9-b160-e155e9dd5fed-dev.e1-us-east-azure.choreoapis.dev/spotify-analytics/spotifyintegration/auth-476/v1.0/auth/callback"
 
 # Cookie name for backend-managed auth session.
 sessionCookieName = "spotify_access_token"
