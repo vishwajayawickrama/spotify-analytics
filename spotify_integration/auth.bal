@@ -36,7 +36,7 @@ service /auth on apiListener {
         }
 
         http:Response response = buildRedirectResponse(
-            string `${frontendBaseUrl}/dashboard#access_token=${accessTokenResult}`
+            string `${frontendBaseUrl}/dashboard/#access_token=${accessTokenResult}`
         );
         response.setHeader("Set-Cookie", buildSessionCookie(accessTokenResult, false));
         return response;
