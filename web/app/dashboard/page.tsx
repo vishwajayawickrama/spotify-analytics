@@ -82,6 +82,9 @@ export default function DashboardPage() {
 
   // Fetch analytics only when authenticated.
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
     if (!auth?.authenticated && !accessToken) {
       setSummary(null);
       setLoading(false);
@@ -99,7 +102,7 @@ export default function DashboardPage() {
       .catch((err) => {
         if (!cancelled) {
           setError(err.message ?? String(err));
-          if (accessToken) {
+          if (tokenForApi) {
             window.sessionStorage.removeItem("spotify_access_token");
             setAccessToken(null);
             setAuth({ authenticated: false });
@@ -113,7 +116,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, accessToken, useTokenFallback, timeRange]);
+  }, [auth?.authenticated, accessToken, authLoading, useTokenFallback, timeRange]);
 
   const initial = useMemo(
     () => summary?.profile.display_name?.[0]?.toUpperCase() ?? "?",

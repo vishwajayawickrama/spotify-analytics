@@ -99,6 +99,9 @@ export default function DashboardDetailClient({ section }: { section: string }) 
       setLoading(false);
       return;
     }
+    if (authLoading) {
+      return;
+    }
     if (!auth?.authenticated && !accessToken) {
       setLoading(false);
       return;
@@ -126,7 +129,7 @@ export default function DashboardDetailClient({ section }: { section: string }) 
       .catch((err) => {
         if (!cancelled) {
           setError(err.message ?? String(err));
-          if (accessToken) {
+          if (tokenForApi) {
             window.sessionStorage.removeItem("spotify_access_token");
             setAccessToken(null);
             setAuth({ authenticated: false });
@@ -141,7 +144,7 @@ export default function DashboardDetailClient({ section }: { section: string }) 
     return () => {
       cancelled = true;
     };
-  }, [accessToken, auth?.authenticated, timeRange, typedSection, useTokenFallback]);
+  }, [accessToken, auth?.authenticated, authLoading, timeRange, typedSection, useTokenFallback]);
 
   const userLabel = auth?.profile?.display_name ?? "Your library";
   const initial = userLabel[0]?.toUpperCase() ?? "?";
