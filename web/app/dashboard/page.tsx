@@ -102,7 +102,7 @@ export default function DashboardPage() {
     const tokenForApi = useTokenFallback ? accessToken ?? undefined : undefined;
     Promise.all([
       analyticsApi.summary(timeRange, tokenForApi),
-      analyticsApi.listeningHistory(5000, tokenForApi)
+      analyticsApi.listeningHistory(20000, tokenForApi)
     ])
       .then(([summaryData, historyData]) => {
         if (cancelled) return;

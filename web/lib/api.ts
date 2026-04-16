@@ -109,7 +109,7 @@ export const analyticsApi = {
     call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
     }),
-  listeningHistory: (maxItems = 5000, accessToken?: string) =>
+  listeningHistory: (maxItems = 20000, accessToken?: string) =>
     call<ListeningHistoryResponse>(`/listening-history?maxItems=${maxItems}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
     })

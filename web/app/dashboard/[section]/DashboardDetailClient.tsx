@@ -131,7 +131,7 @@ export default function DashboardDetailClient({ section }: { section: string }) 
         ? analyticsApi.topTracks(timeRange, 50, tokenForApi)
         : typedSection === "recently-played"
         ? analyticsApi.recentlyPlayed(50, tokenForApi)
-        : analyticsApi.listeningHistory(5000, tokenForApi);
+        : analyticsApi.listeningHistory(20000, tokenForApi);
 
     request
       .then((data) => {

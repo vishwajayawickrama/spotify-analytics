@@ -42,7 +42,7 @@ public isolated function fetchRecentlyPlayed(string accessToken, int 'limit = 20
     return toRecentlyPlayed(payload);
 }
 
-public isolated function fetchListeningHistory(string accessToken, int maxItems = 5000)
+public isolated function fetchListeningHistory(string accessToken, int maxItems = 20000)
         returns ListeningHistoryResponse|error {
     int safeMaxItems = maxItems < 50 ? 50 : maxItems;
     int total = 0;
@@ -70,22 +70,14 @@ public isolated function fetchListeningHistory(string accessToken, int maxItems 
         total = history.length();
 
         map<json> payloadMap = check payload.ensureType();
-        if !payloadMap.hasKey("cursors") {
+        string? nextBeforeCursor = extractBeforeCursor(payloadMap);
+        if nextBeforeCursor is () {
             break;
         }
-        json cursorsJson = payloadMap["cursors"];
-        if cursorsJson is () {
+        if beforeCursor is string && beforeCursor == nextBeforeCursor {
             break;
         }
-        map<json> cursorMap = check cursorsJson.ensureType();
-        if !cursorMap.hasKey("before") {
-            break;
-        }
-        json beforeJson = cursorMap["before"];
-        if !(beforeJson is string) || beforeJson.length() == 0 {
-            break;
-        }
-        beforeCursor = beforeJson;
+        beforeCursor = nextBeforeCursor;
     }
 
     if total >= safeMaxItems {
@@ -97,6 +89,43 @@ public isolated function fetchListeningHistory(string accessToken, int maxItems 
         fetchedItems: total,
         truncated
     };
+}
+
+isolated function extractBeforeCursor(map<json> payloadMap) returns string? {
+    if payloadMap.hasKey("cursors") {
+        json cursorsJson = payloadMap["cursors"];
+        if cursorsJson is map<json> {
+            map<json> cursorMap = cursorsJson;
+            if cursorMap.hasKey("before") {
+                json beforeJson = cursorMap["before"];
+                if beforeJson is string && beforeJson.length() > 0 {
+                    return beforeJson;
+                }
+            }
+        }
+    }
+
+    if payloadMap.hasKey("next") {
+        json nextJson = payloadMap["next"];
+        if nextJson is string && nextJson.length() > 0 {
+            int? beforeIndex = nextJson.indexOf("before=");
+            if beforeIndex is int {
+                int valueStart = beforeIndex + 7;
+                string tail = nextJson.substring(valueStart);
+                int? ampIndex = tail.indexOf("&");
+                if ampIndex is int {
+                    string cursor = tail.substring(0, ampIndex);
+                    if cursor.length() > 0 {
+                        return cursor;
+                    }
+                } else if tail.length() > 0 {
+                    return tail;
+                }
+            }
+        }
+    }
+
+    return ();
 }
 
 // Aggregates several endpoints into a single analytics summary.

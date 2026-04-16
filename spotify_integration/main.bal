@@ -91,7 +91,7 @@ service /analytics on apiListener {
     // Paginated listening history for windowed activity analytics.
     resource function get listening\-history(@http:Header {name: "Authorization"} string? authorization,
             @http:Header {name: "Cookie"} string? cookieHeader,
-            int maxItems = 5000)
+            int maxItems = 20000)
             returns ListeningHistoryResponse|http:Unauthorized|http:InternalServerError {
         string|http:Unauthorized token = resolveAccessToken(authorization, cookieHeader);
         if token is http:Unauthorized {
