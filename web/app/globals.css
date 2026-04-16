@@ -425,6 +425,7 @@ button {
   gap: 8px;
   position: relative;
   overflow: hidden;
+  color: var(--fg);
 }
 
 .activity-delta {
@@ -454,17 +455,17 @@ button {
 
 .sparkline-grid-row line,
 .sparkline-x-tick line {
-  stroke: rgba(255, 255, 255, 0.07);
+  stroke: rgba(255, 255, 255, 0.11);
   stroke-width: 1;
 }
 
 .sparkline-grid-row text,
 .sparkline-x-tick text,
 .sparkline-point text {
-  fill: var(--fg-dim);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  fill: rgba(214, 226, 219, 0.72);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .sparkline-line {
@@ -482,6 +483,13 @@ button {
 .sparkline-point circle {
   stroke: rgba(7, 9, 10, 0.95);
   stroke-width: 2;
+}
+
+.sparkline-point text {
+  paint-order: stroke;
+  stroke: rgba(7, 9, 10, 0.92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .sparkline-point-peak circle {
@@ -512,6 +520,7 @@ button {
   margin-top: 4px;
   font-size: 18px;
   letter-spacing: -0.02em;
+  color: var(--fg);
 }
 
 .sparkline-pill-label {
@@ -545,7 +554,7 @@ button {
 
 .activity-focus-copy {
   max-width: 320px;
-  color: var(--fg-muted);
+  color: rgba(222, 236, 228, 0.76);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -560,7 +569,7 @@ button {
 
 .activity-chart-caption {
   margin-bottom: 10px;
-  color: var(--fg-muted);
+  color: rgba(224, 236, 231, 0.78);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -575,18 +584,36 @@ button {
   text-align: left;
   border: 1px solid var(--border);
   cursor: pointer;
+  color: var(--fg);
   background:
     linear-gradient(180deg, rgba(20, 26, 29, 0.94), rgba(20, 26, 29, 0.84));
 }
 
 .activity-select.active {
   border-color: var(--accent);
+  color: var(--fg);
   background:
     radial-gradient(260px 120px at 100% 0%, rgba(29, 185, 84, 0.14), transparent 65%),
     rgba(29, 185, 84, 0.08);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
+.activity-select .stat-label {
+  color: rgba(220, 232, 225, 0.68);
+}
+
+.activity-select .stat-value {
+  color: var(--fg);
+}
+
+.activity-select.active .stat-label {
+  color: rgba(232, 244, 237, 0.78);
+}
+
+.activity-select.active .stat-value {
+  color: #f3fbf6;
 }
 
 /* ---------- Artist grid ---------- */
