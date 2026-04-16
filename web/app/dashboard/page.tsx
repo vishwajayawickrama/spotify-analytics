@@ -170,6 +170,7 @@ export default function DashboardPage() {
     () => listeningMetrics.find((metric) => metric.key === "lastDay"),
     [listeningMetrics]
   );
+  const topArtistsPreview = useMemo(() => summary?.topArtists.slice(0, 6) ?? [], [summary]);
 
   if (authLoading) {
     return <div className="loading">Loading session…</div>;
@@ -336,30 +337,43 @@ export default function DashboardPage() {
                 See more →
               </button>
             </div>
-            <div className="row row-scroll">
-              {summary.topArtists.map((a) => (
-                <div key={a.id} className="artist-card">
-                  {a.images[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.images[0].url} alt={a.name} />
-                  ) : (
-                    <div
-                      className="artist-art"
-                      style={{ backgroundImage: gradientFor(a.name) }}
-                    >
-                      <span>
-                        {a.name
-                          .split(" ")
-                          .filter(Boolean)
-                          .slice(0, 2)
-                          .map((w) => w[0]?.toUpperCase() ?? "")
-                          .join("")}
-                      </span>
-                    </div>
-                  )}
+            <div className="row row-scroll artist-preview-row">
+              {topArtistsPreview.map((a, index) => (
+                <div key={a.id} className="artist-card artist-preview-card">
+                  <div className="artist-visual">
+                    <div className="detail-rank">#{String(index + 1).padStart(2, "0")}</div>
+                    {a.images[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={pickImage(a.images, 320)} alt={a.name} />
+                    ) : (
+                      <div
+                        className="artist-art"
+                        style={{ backgroundImage: gradientFor(a.name) }}
+                      >
+                        <span>
+                          {a.name
+                            .split(" ")
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((w) => w[0]?.toUpperCase() ?? "")
+                            .join("")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className="name">{a.name}</div>
                   <div className="meta">
                     {formatNumber(a.followers)} followers
+                  </div>
+                  <div className="chips">
+                    {(a.genres.length === 0 ? ["No genres yet"] : a.genres.slice(0, 2)).map((genre) => (
+                      <span
+                        key={`${a.id}-${genre}`}
+                        className={`chip ${a.genres.length === 0 ? "chip-muted" : ""}`}
+                      >
+                        {genre}
+                      </span>
+                    ))}
                   </div>
                   <div className="pop-bar">
                     <div

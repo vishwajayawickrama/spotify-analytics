@@ -528,6 +528,10 @@ button {
   .row-scroll {
     grid-auto-columns: minmax(0, 176px);
   }
+
+  .artist-preview-row {
+    grid-auto-columns: minmax(200px, 1fr);
+  }
 }
 
 .row-scroll::-webkit-scrollbar-track {
@@ -542,6 +546,44 @@ button {
 .row-scroll > .artist-card {
   width: 100%;
   scroll-snap-align: start;
+}
+
+.artist-preview-row {
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 16px;
+}
+
+.artist-preview-card {
+  min-height: 100%;
+  padding: 14px;
+  gap: 12px;
+}
+
+.artist-preview-card .artist-visual .detail-rank {
+  top: 10px;
+  left: 10px;
+}
+
+.artist-preview-card .artist-visual img,
+.artist-preview-card .artist-visual .artist-art {
+  display: block;
+  min-height: 180px;
+}
+
+.artist-preview-card .name {
+  font-size: 16px;
+}
+
+.artist-preview-card .meta {
+  font-size: 13px;
+}
+
+.artist-preview-card .chips {
+  min-height: 32px;
+}
+
+.artist-preview-card .chip {
+  padding: 6px 10px;
 }
 
 .detail-grid {
@@ -1045,6 +1087,15 @@ button {
     grid-auto-columns: minmax(0, 160px);
     gap: 12px;
     padding-bottom: 6px;
+  }
+
+  .artist-preview-row {
+    grid-auto-columns: minmax(180px, 82vw);
+  }
+
+  .artist-preview-card .artist-visual img,
+  .artist-preview-card .artist-visual .artist-art {
+    min-height: 160px;
   }
 
   .detail-grid {
