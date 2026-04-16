@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { AnalyticsSummary, SpotifyImage } from "@/lib/api";
 import { gradientFor } from "@/lib/placeholderData";
 
@@ -136,20 +137,120 @@ export function Sparkline({
     return <div className="sparkline-empty">No data</div>;
   }
 
+  const chartId = useId();
+  const paddingTop = 14;
+  const paddingRight = 10;
+  const paddingBottom = 34;
+  const paddingLeft = 10;
+  const chartWidth = Math.max(1, width - paddingLeft - paddingRight);
+  const chartHeight = Math.max(1, height - paddingTop - paddingBottom);
   const maxY = Math.max(1, ...points.map((p) => p.value));
-  const step = points.length > 1 ? width / (points.length - 1) : width;
-  const polyline = points
-    .map((p, index) => {
-      const x = index * step;
-      const y = height - (p.value / maxY) * height;
-      return `${x},${y}`;
-    })
+  const step = points.length > 1 ? chartWidth / (points.length - 1) : chartWidth;
+
+  const chartPoints = points.map((point, index) => {
+    const x = paddingLeft + index * step;
+    const y = paddingTop + chartHeight - (point.value / maxY) * chartHeight;
+    return { ...point, x, y };
+  });
+
+  const linePath = chartPoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
     .join(" ");
 
+  const areaPath = `${linePath} L ${paddingLeft + chartWidth} ${paddingTop + chartHeight} L ${paddingLeft} ${paddingTop + chartHeight} Z`;
+
+  const gridSteps = 4;
+  const yTicks = Array.from({ length: gridSteps }, (_, index) => {
+    const ratio = index / (gridSteps - 1);
+    const value = Math.round(maxY * (1 - ratio));
+    const y = paddingTop + chartHeight * ratio;
+    return { value, y };
+  });
+
+  const xTickIndexes = Array.from(
+    new Set([0, Math.floor((points.length - 1) / 2), points.length - 1].filter((index) => index >= 0))
+  );
+  const xTicks = xTickIndexes.map((index) => chartPoints[index]);
+
+  const latestPoint = chartPoints[chartPoints.length - 1];
+  const peakPoint = chartPoints.reduce((currentPeak, point) =>
+    point.value > currentPeak.value ? point : currentPeak
+  );
+  const activeBuckets = points.filter((point) => point.value > 0).length;
+  const averagePerBucket = points.reduce((sum, point) => sum + point.value, 0) / points.length;
+
   return (
-    <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
-      <polyline points={polyline} />
-    </svg>
+    <div className="sparkline-shell">
+      <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
+        <defs>
+          <linearGradient id={`${chartId}-line`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--accent)" />
+            <stop offset="100%" stopColor="var(--accent-2)" />
+          </linearGradient>
+          <linearGradient id={`${chartId}-area`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(92, 225, 255, 0.34)" />
+            <stop offset="100%" stopColor="rgba(29, 185, 84, 0.02)" />
+          </linearGradient>
+        </defs>
+
+        {yTicks.map((tick) => (
+          <g key={`y-${tick.y}`} className="sparkline-grid-row">
+            <line x1={paddingLeft} y1={tick.y} x2={paddingLeft + chartWidth} y2={tick.y} />
+            <text x={width - 2} y={tick.y - 4} textAnchor="end">
+              {tick.value}
+            </text>
+          </g>
+        ))}
+
+        <path className="sparkline-area" d={areaPath} fill={`url(#${chartId}-area)`} />
+        <path className="sparkline-line" d={linePath} stroke={`url(#${chartId}-line)`} />
+
+        {peakPoint.value > 0 && (
+          <g className="sparkline-point sparkline-point-peak">
+            <circle cx={peakPoint.x} cy={peakPoint.y} r="4.5" />
+            <text x={peakPoint.x} y={peakPoint.y - 12} textAnchor="middle">
+              Peak {peakPoint.value}
+            </text>
+          </g>
+        )}
+
+        <g className="sparkline-point sparkline-point-latest">
+          <circle cx={latestPoint.x} cy={latestPoint.y} r="4.5" />
+          <text x={latestPoint.x} y={latestPoint.y - 12} textAnchor="middle">
+            Now {latestPoint.value}
+          </text>
+        </g>
+
+        {xTicks.map((tick) => (
+          <g key={`x-${tick.label}-${tick.x}`} className="sparkline-x-tick">
+            <line
+              x1={tick.x}
+              y1={paddingTop + chartHeight}
+              x2={tick.x}
+              y2={paddingTop + chartHeight + 6}
+            />
+            <text x={tick.x} y={height - 8} textAnchor="middle">
+              {tick.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+
+      <div className="sparkline-summary" aria-hidden>
+        <div className="sparkline-pill">
+          <span className="sparkline-pill-label">Peak bucket</span>
+          <strong>{peakPoint.value}</strong>
+        </div>
+        <div className="sparkline-pill">
+          <span className="sparkline-pill-label">Avg / bucket</span>
+          <strong>{averagePerBucket.toFixed(1)}</strong>
+        </div>
+        <div className="sparkline-pill">
+          <span className="sparkline-pill-label">Active buckets</span>
+          <strong>{activeBuckets}</strong>
+        </div>
+      </div>
+    </div>
   );
 }
 

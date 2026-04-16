@@ -423,6 +423,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
 }
 
 .activity-delta {
@@ -440,16 +442,85 @@ button {
 
 .sparkline {
   width: 100%;
-  height: 54px;
-  margin-top: 2px;
+  height: 100%;
+  display: block;
 }
 
-.sparkline polyline {
+.sparkline-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sparkline-grid-row line,
+.sparkline-x-tick line {
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 1;
+}
+
+.sparkline-grid-row text,
+.sparkline-x-tick text,
+.sparkline-point text {
+  fill: var(--fg-dim);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.sparkline-line {
   fill: none;
-  stroke: var(--accent-2);
-  stroke-width: 2;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(92, 225, 255, 0.18));
+}
+
+.sparkline-area {
+  opacity: 0.95;
+}
+
+.sparkline-point circle {
+  stroke: rgba(7, 9, 10, 0.95);
+  stroke-width: 2;
+}
+
+.sparkline-point-peak circle {
+  fill: var(--accent);
+}
+
+.sparkline-point-latest circle {
+  fill: var(--accent-2);
+}
+
+.sparkline-summary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sparkline-pill {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.sparkline-pill strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.sparkline-pill-label {
+  display: block;
+  color: var(--fg-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .sparkline-empty {
@@ -460,22 +531,62 @@ button {
 
 .activity-focus {
   padding: 22px;
+  background:
+    radial-gradient(320px 180px at 100% 0%, rgba(29, 185, 84, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(20, 26, 29, 0.96), rgba(20, 26, 29, 0.86));
+}
+
+.activity-focus-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.activity-focus-copy {
+  max-width: 320px;
+  color: var(--fg-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.activity-chart-frame {
+  margin-top: 14px;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(9, 13, 15, 0.54), rgba(9, 13, 15, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.activity-chart-caption {
+  margin-bottom: 10px;
+  color: var(--fg-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .activity-focus .sparkline {
-  height: 220px;
-  margin-top: 12px;
+  height: 260px;
 }
 
 .activity-select {
   text-align: left;
   border: 1px solid var(--border);
   cursor: pointer;
+  background:
+    linear-gradient(180deg, rgba(20, 26, 29, 0.94), rgba(20, 26, 29, 0.84));
 }
 
 .activity-select.active {
   border-color: var(--accent);
-  background: rgba(29, 185, 84, 0.08);
+  background:
+    radial-gradient(260px 120px at 100% 0%, rgba(29, 185, 84, 0.14), transparent 65%),
+    rgba(29, 185, 84, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 32px rgba(0, 0, 0, 0.22);
 }
 
 /* ---------- Artist grid ---------- */
@@ -1066,8 +1177,29 @@ button {
     padding: 18px;
   }
 
+  .activity-focus-head {
+    flex-direction: column;
+  }
+
+  .activity-focus-copy {
+    max-width: none;
+  }
+
   .activity-focus .sparkline {
     height: 160px;
+  }
+
+  .activity-chart-frame {
+    padding: 12px 12px 10px;
+  }
+
+  .sparkline-summary {
+    gap: 8px;
+  }
+
+  .sparkline-pill {
+    min-width: calc(50% - 4px);
+    flex: 1 1 120px;
   }
 
   .split {

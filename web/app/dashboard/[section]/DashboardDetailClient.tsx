@@ -386,12 +386,22 @@ export default function DashboardDetailClient({ section }: { section: string }) 
             </div>
           )}
           <div className="activity-focus card">
-            <div className="stat-label">{activeMetric.label}</div>
-            <div className="stat-value">{formatNumber(activeMetric.count)}</div>
-            <div className={`activity-delta ${activeMetric.delta >= 0 ? "up" : "down"}`}>
-              {formatDelta(activeMetric.delta, activeMetric.deltaPct)}
+            <div className="activity-focus-head">
+              <div>
+                <div className="stat-label">{activeMetric.label}</div>
+                <div className="stat-value">{formatNumber(activeMetric.count)}</div>
+                <div className={`activity-delta ${activeMetric.delta >= 0 ? "up" : "down"}`}>
+                  {formatDelta(activeMetric.delta, activeMetric.deltaPct)}
+                </div>
+              </div>
+              <div className="activity-focus-copy">
+                Plays are grouped into time buckets so you can spot spikes and quiet stretches quickly.
+              </div>
             </div>
-            <Sparkline points={activeMetric.series} width={760} height={220} />
+            <div className="activity-chart-frame">
+              <div className="activity-chart-caption">Trend across the selected listening window</div>
+              <Sparkline points={activeMetric.series} width={760} height={260} />
+            </div>
           </div>
           <div className="activity-grid" style={{ marginTop: 16 }}>
             {activityMetrics.map((metric) => (
