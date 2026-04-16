@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import DashboardDetailClient from "./DashboardDetailClient";
+import { loadingState } from "@/lib/ui";
 
 export function generateStaticParams() {
   return [
@@ -16,7 +17,7 @@ export default function DashboardDetailPage({
   params: { section: string };
 }) {
   return (
-    <Suspense fallback={<div className="loading">Loading details…</div>}>
+    <Suspense fallback={<div className={loadingState}>Loading details…</div>}>
       <DashboardDetailClient section={params.section} />
     </Suspense>
   );

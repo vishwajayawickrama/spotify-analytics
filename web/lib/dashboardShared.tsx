@@ -3,6 +3,7 @@
 import { useId } from "react";
 import type { AnalyticsSummary, SpotifyImage } from "@/lib/api";
 import { gradientFor } from "@/lib/placeholderData";
+import { cx } from "@/lib/ui";
 
 export const TIME_RANGES = [
   { value: "short_term", label: "Last 4 weeks" },
@@ -134,7 +135,7 @@ export function Sparkline({
   height?: number;
 }) {
   if (points.length === 0) {
-    return <div className="sparkline-empty">No data</div>;
+    return <div className="mt-2 text-xs text-[color:var(--fg-muted)]">No data</div>;
   }
 
   const chartId = useId();
@@ -180,8 +181,8 @@ export function Sparkline({
   const averagePerBucket = points.reduce((sum, point) => sum + point.value, 0) / points.length;
 
   return (
-    <div className="sparkline-shell">
-      <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
+    <div className="flex flex-col gap-3.5">
+      <svg className="block h-full w-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
         <defs>
           <linearGradient id={`${chartId}-line`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="var(--accent)" />
@@ -194,60 +195,109 @@ export function Sparkline({
         </defs>
 
         {yTicks.map((tick) => (
-          <g key={`y-${tick.y}`} className="sparkline-grid-row">
+          <g key={`y-${tick.y}`}>
             <line x1={paddingLeft} y1={tick.y} x2={paddingLeft + chartWidth} y2={tick.y} />
-            <text x={width - 2} y={tick.y - 4} textAnchor="end">
+            <text
+              x={width - 2}
+              y={tick.y - 4}
+              textAnchor="end"
+              className="fill-[rgba(214,226,219,0.72)] text-[11px] font-bold tracking-[0.03em]"
+            >
               {tick.value}
             </text>
           </g>
         ))}
 
-        <path className="sparkline-area" d={areaPath} fill={`url(#${chartId}-area)`} />
-        <path className="sparkline-line" d={linePath} stroke={`url(#${chartId}-line)`} />
+        <path d={areaPath} fill={`url(#${chartId}-area)`} className="opacity-95" />
+        <path
+          d={linePath}
+          stroke={`url(#${chartId}-line)`}
+          className="fill-none stroke-[3] [filter:drop-shadow(0_0_10px_rgba(92,225,255,0.18))]"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
         {peakPoint.value > 0 && (
-          <g className="sparkline-point sparkline-point-peak">
-            <circle cx={peakPoint.x} cy={peakPoint.y} r="4.5" />
-            <text x={peakPoint.x} y={peakPoint.y - 12} textAnchor="middle">
+          <g>
+            <circle
+              cx={peakPoint.x}
+              cy={peakPoint.y}
+              r="4.5"
+              className="fill-[color:var(--accent)] stroke-[rgba(7,9,10,0.95)] [stroke-width:2]"
+            />
+            <text
+              x={peakPoint.x}
+              y={peakPoint.y - 12}
+              textAnchor="middle"
+              className="fill-[rgba(214,226,219,0.72)] text-[11px] font-bold tracking-[0.03em] [paint-order:stroke] [stroke-linejoin:round] [stroke-width:3px] stroke-[rgba(7,9,10,0.92)]"
+            >
               Peak {peakPoint.value}
             </text>
           </g>
         )}
 
-        <g className="sparkline-point sparkline-point-latest">
-          <circle cx={latestPoint.x} cy={latestPoint.y} r="4.5" />
-          <text x={latestPoint.x} y={latestPoint.y - 12} textAnchor="middle">
+        <g>
+          <circle
+            cx={latestPoint.x}
+            cy={latestPoint.y}
+            r="4.5"
+            className="fill-[color:var(--accent-2)] stroke-[rgba(7,9,10,0.95)] [stroke-width:2]"
+          />
+          <text
+            x={latestPoint.x}
+            y={latestPoint.y - 12}
+            textAnchor="middle"
+            className="fill-[rgba(214,226,219,0.72)] text-[11px] font-bold tracking-[0.03em] [paint-order:stroke] [stroke-linejoin:round] [stroke-width:3px] stroke-[rgba(7,9,10,0.92)]"
+          >
             Now {latestPoint.value}
           </text>
         </g>
 
         {xTicks.map((tick) => (
-          <g key={`x-${tick.label}-${tick.x}`} className="sparkline-x-tick">
+          <g key={`x-${tick.label}-${tick.x}`}>
             <line
               x1={tick.x}
               y1={paddingTop + chartHeight}
               x2={tick.x}
               y2={paddingTop + chartHeight + 6}
+              className="stroke-white/10"
             />
-            <text x={tick.x} y={height - 8} textAnchor="middle">
+            <text
+              x={tick.x}
+              y={height - 8}
+              textAnchor="middle"
+              className="fill-[rgba(214,226,219,0.72)] text-[11px] font-bold tracking-[0.03em]"
+            >
               {tick.label}
             </text>
           </g>
         ))}
       </svg>
 
-      <div className="sparkline-summary" aria-hidden>
-        <div className="sparkline-pill">
-          <span className="sparkline-pill-label">Peak bucket</span>
-          <strong>{peakPoint.value}</strong>
+      <div className="flex flex-wrap gap-2.5" aria-hidden>
+        <div className="min-w-[120px] rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--fg-muted)]">
+            Peak bucket
+          </span>
+          <strong className="mt-1 block text-lg font-bold tracking-[-0.02em] text-[color:var(--fg)]">
+            {peakPoint.value}
+          </strong>
         </div>
-        <div className="sparkline-pill">
-          <span className="sparkline-pill-label">Avg / bucket</span>
-          <strong>{averagePerBucket.toFixed(1)}</strong>
+        <div className="min-w-[120px] rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--fg-muted)]">
+            Avg / bucket
+          </span>
+          <strong className="mt-1 block text-lg font-bold tracking-[-0.02em] text-[color:var(--fg)]">
+            {averagePerBucket.toFixed(1)}
+          </strong>
         </div>
-        <div className="sparkline-pill">
-          <span className="sparkline-pill-label">Active buckets</span>
-          <strong>{activeBuckets}</strong>
+        <div className="min-w-[120px] rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--fg-muted)]">
+            Active buckets
+          </span>
+          <strong className="mt-1 block text-lg font-bold tracking-[-0.02em] text-[color:var(--fg)]">
+            {activeBuckets}
+          </strong>
         </div>
       </div>
     </div>
@@ -333,7 +383,7 @@ export function ArtBlock({
   if (imageUrl) {
     return (
       <img
-        className="art-block"
+        className="grid shrink-0 place-items-center rounded-lg font-extrabold text-white/95 [text-shadow:0_2px_8px_rgba(0,0,0,0.4)]"
         src={imageUrl}
         alt={seed}
         style={{ width: size, height: size, objectFit: "cover" }}
@@ -343,7 +393,10 @@ export function ArtBlock({
 
   return (
     <div
-      className="art-block"
+      className={cx(
+        "grid shrink-0 place-items-center rounded-lg font-extrabold text-white/95 [text-shadow:0_2px_8px_rgba(0,0,0,0.4)]",
+        size <= 52 ? "text-base" : "text-lg"
+      )}
       style={{
         width: size,
         height: size,

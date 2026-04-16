@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
+import { AuthScreen } from "@/lib/ui-components";
 
 export default function HomePage() {
   const router = useRouter();
@@ -37,35 +38,23 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="signin-screen">
-      <div className="aurora" aria-hidden />
-      <div className="signin-card">
-        <div className="signin-badge">
-          <span className="brand-dot" />
-          Spotify Analytics
-        </div>
-        <h1>
-          Your listening,
+    <AuthScreen
+      title="Your listening,"
+      titleAccent={
+        <>
           <br />
-          <span className="grad-text">beautifully understood.</span>
-        </h1>
-        <p>
-          Top artists, top tracks, recent listening history, and the genres
-          that define your taste — pulled live from the Spotify Web API.
-        </p>
-        <div className="signin-actions">
-          <button
-            className="btn"
-            onClick={() => {
-              window.location.href = authApi.loginUrl;
-            }}
-            disabled={status === "loading"}
-          >
-            {status === "loading" ? "Loading…" : "Sign in with Spotify"}
-          </button>
-        </div>
-        <div className="signin-foot">Sign in to view your personalized dashboard.</div>
-      </div>
-    </div>
+          <span className="bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] bg-clip-text text-transparent">
+            beautifully understood.
+          </span>
+        </>
+      }
+      description="Top artists, top tracks, recent listening history, and the genres that define your taste — pulled live from the Spotify Web API."
+      buttonLabel={status === "loading" ? "Loading…" : "Sign in with Spotify"}
+      buttonDisabled={status === "loading"}
+      onSubmit={() => {
+        window.location.href = authApi.loginUrl;
+      }}
+      footer="Sign in to view your personalized dashboard."
+    />
   );
 }

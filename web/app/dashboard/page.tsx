@@ -22,6 +22,27 @@ import {
   pickImage
 } from "@/lib/dashboardShared";
 import { gradientFor } from "@/lib/placeholderData";
+import {
+  aurora,
+  auroraSoft,
+  banner,
+  cardBase,
+  cx,
+  errorBanner,
+  loadingState,
+  pageShell,
+  sectionTitle,
+  statLabel,
+  statSub,
+  statValue
+} from "@/lib/ui";
+import {
+  AppHeader,
+  AuthScreen,
+  MediaList,
+  SectionHeader,
+  SegmentedControls
+} from "@/lib/ui-components";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -173,50 +194,33 @@ export default function DashboardPage() {
   const topArtistsPreview = useMemo(() => summary?.topArtists.slice(0, 6) ?? [], [summary]);
 
   if (authLoading) {
-    return <div className="loading">Loading session…</div>;
+    return <div className={loadingState}>Loading session…</div>;
   }
 
   if (!auth?.authenticated && !accessToken) {
     return (
-      <div className="signin-screen">
-        <div className="aurora" aria-hidden />
-        <div className="signin-card">
-          <div className="signin-badge">
-            <span className="brand-dot" />
-            Spotify Analytics
-          </div>
-          <h1>Sign in required</h1>
-          <p>Authenticate with Spotify to access your listening analytics dashboard.</p>
-          <div className="signin-actions">
-            <button
-              className="btn"
-              onClick={() => {
-                window.location.href = authApi.loginUrl;
-              }}
-            >
-              Sign in with Spotify
-            </button>
-          </div>
-        </div>
-      </div>
+      <AuthScreen
+        title="Sign in required"
+        description="Authenticate with Spotify to access your listening analytics dashboard."
+        buttonLabel="Sign in with Spotify"
+        onSubmit={() => {
+          window.location.href = authApi.loginUrl;
+        }}
+      />
     );
   }
 
   return (
-    <div className="page">
-      <div className="aurora aurora-soft" aria-hidden />
+    <div className={pageShell}>
+      <div className={cx(aurora, auroraSoft)} aria-hidden />
 
-      <header className="header">
-        <div className="brand">
-          <span className="brand-dot" />
-          Spotify Analytics
-        </div>
-        <div className="user-chip">
-          <div className="avatar">{initial}</div>
-          <span>{summary?.profile.display_name ?? auth?.profile?.display_name ?? "…"}</span>
+      <AppHeader
+        brand="Spotify Analytics"
+        userLabel={summary?.profile.display_name ?? auth?.profile?.display_name ?? "…"}
+        initial={initial}
+        action={
           <button
-            className="btn-ghost"
-            style={{ marginLeft: 8 }}
+            className="ml-2 inline-flex min-h-10 items-center rounded-full border border-[color:var(--border)] bg-transparent px-4 py-2 text-[13px] text-[color:var(--fg-muted)] transition hover:border-[color:var(--fg-muted)] hover:bg-white/[0.02] hover:text-[color:var(--fg)]"
             onClick={() => {
               window.sessionStorage.removeItem("spotify_access_token");
               setAccessToken(null);
@@ -230,87 +234,81 @@ export default function DashboardPage() {
           >
             Sign out
           </button>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="controls">
-        {TIME_RANGES.map((tr) => (
-          <button
-            key={tr.value}
-            className={`btn-ghost ${timeRange === tr.value ? "active" : ""}`}
-            onClick={() => setTimeRange(tr.value)}
-          >
-            {tr.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControls
+        items={TIME_RANGES.map((tr) => ({ value: tr.value, label: tr.label }))}
+        activeValue={timeRange}
+        onChange={setTimeRange}
+      />
 
-      {error && <div className="error">Failed to load analytics: {error}</div>}
+      {error && <div className={errorBanner}>Failed to load analytics: {error}</div>}
 
-      {loading && !summary && <div className="loading">Loading analytics…</div>}
+      {loading && !summary && <div className={loadingState}>Loading analytics…</div>}
 
       {summary && (
         <>
-          <section className="section">
-            <h2>Your Listening</h2>
-            <div className="stats-grid">
-              <div className="card stat-card">
-                <div className="stat-label">Most listened artist</div>
-                <div className="stat-value stat-value-lg">
+          <section className="mt-11 sm:mt-7">
+            <h2 className={cx(sectionTitle, "mb-4")}>Your Listening</h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3.5 sm:grid-cols-1 sm:gap-3">
+              <div className={cx(cardBase, "relative overflow-hidden p-[18px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120px_80px_at_100%_0%,rgba(29,185,84,0.10),transparent_70%)]")}>
+                <div className={statLabel}>Most listened artist</div>
+                <div className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[22px] font-bold tracking-[-0.02em] text-[color:var(--fg)] sm:text-xl">
                   {listenerStats?.topArtist?.name ?? "—"}
                 </div>
-                <div className="stat-sub">
+                <div className={statSub}>
                   #1 in your rotation this period
                 </div>
               </div>
 
-              <div className="card stat-card">
+              <div className={cx(cardBase, "relative overflow-hidden p-[18px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120px_80px_at_100%_0%,rgba(29,185,84,0.10),transparent_70%)]")}>
                 <button
                   type="button"
-                  className="activity-summary-button"
+                  className="group block w-full cursor-pointer bg-transparent p-0 text-left text-inherit"
                   onClick={() => {
                     router.push("/dashboard/listening-activity?window=lastDay");
                   }}
                   aria-label="Open listening activity details"
                 >
-                  <div className="activity-summary-head">
-                    <div className="stat-label">Listening activity (last day)</div>
-                    <span className="activity-summary-arrow" aria-hidden>
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className={statLabel}>Listening activity (last day)</div>
+                    <span className="text-sm font-bold text-[color:var(--fg-muted)] transition group-hover:translate-x-1 group-hover:text-[color:var(--accent)]" aria-hidden>
                       →
                     </span>
                   </div>
-                  <div className="stat-value">{formatNumber(lastDayListening?.count ?? 0)}</div>
-                  <div className={`activity-delta ${(lastDayListening?.delta ?? 0) >= 0 ? "up" : "down"}`}>
+                  <div className={statValue}>{formatNumber(lastDayListening?.count ?? 0)}</div>
+                  <div className={cx("text-xs font-semibold", (lastDayListening?.delta ?? 0) >= 0 ? "text-[color:var(--accent)]" : "text-[color:var(--danger)]")}>
                     {formatDelta(lastDayListening?.delta ?? 0, lastDayListening?.deltaPct ?? null)}
                   </div>
-                  <div className="stat-sub">Based on {formatNumber(listeningHistory.length)} plays fetched.</div>
-                  <div className="stat-sub activity-summary-hint">See more with all activity filters</div>
+                  <div className={statSub}>Based on {formatNumber(listeningHistory.length)} plays fetched.</div>
+                  <div className={cx(statSub, "mt-1 text-[color:var(--fg-muted)]")}>See more with all activity filters</div>
                 </button>
               </div>
 
-              <div className="card stat-card">
-                <div className="stat-label">Avg track length</div>
-                <div className="stat-value">
+              <div className={cx(cardBase, "relative overflow-hidden p-[18px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120px_80px_at_100%_0%,rgba(29,185,84,0.10),transparent_70%)]")}>
+                <div className={statLabel}>Avg track length</div>
+                <div className={statValue}>
                   {formatDuration(listenerStats?.avgDurationMs ?? 0)}
-                  <span className="stat-suffix">min</span>
+                  <span className="text-[13px] font-medium text-[color:var(--fg-muted)]">min</span>
                 </div>
-                <div className="stat-sub">
+                <div className={statSub}>
                   From your {listenerStats?.trackCount ?? 0} top tracks
                 </div>
               </div>
 
-              <div className="card stat-card">
-                <div className="stat-label">Taste profile</div>
-                <div className="stat-value stat-value-lg">
+              <div className={cx(cardBase, "relative overflow-hidden p-[18px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120px_80px_at_100%_0%,rgba(29,185,84,0.10),transparent_70%)]")}>
+                <div className={statLabel}>Taste profile</div>
+                <div className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[22px] font-bold capitalize tracking-[-0.02em] text-[color:var(--fg)] sm:text-xl">
                   {listenerStats?.tasteLabel ?? "—"}
                 </div>
-                <div className="stat-bar">
+                <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/[0.04]">
                   <div
-                    className="stat-bar-fill"
+                    className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]"
                     style={{ width: `${listenerStats?.avgPopularity ?? 0}%` }}
                   />
                 </div>
-                <div className="stat-sub">
+                <div className={statSub}>
                   {listenerStats?.avgPopularity ?? 0}/100 mainstream score
                 </div>
               </div>
@@ -318,36 +316,37 @@ export default function DashboardPage() {
           </section>
 
           {historyTruncated && (
-            <div className="banner" style={{ marginTop: 16, marginBottom: 0 }}>
+            <div className={cx(banner, "mb-0 mt-4")}>
               <strong>Note:</strong>
               Listening activity is shown from available Spotify history.
             </div>
           )}
 
-          <section className="section">
-            <div className="section-head">
-              <h2>Top Artists</h2>
-              <button
-                className="see-more"
-                type="button"
-                onClick={() => {
-                  router.push(`/dashboard/artists?timeRange=${timeRange}`);
-                }}
-              >
-                See more →
-              </button>
-            </div>
-            <div className="row row-scroll artist-preview-row">
+          <section className="mt-11 sm:mt-7">
+            <SectionHeader
+              title="Top Artists"
+              actionLabel="See more →"
+              onAction={() => {
+                router.push(`/dashboard/artists?timeRange=${timeRange}`);
+              }}
+            />
+            <div className="grid w-full max-w-full auto-cols-[minmax(220px,1fr)] grid-flow-col gap-4 overflow-x-auto pb-2 [scrollbar-color:var(--border-strong)_transparent] [scrollbar-width:thin] sm:auto-cols-[minmax(180px,82vw)] sm:gap-3 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[color:var(--border-strong)]">
               {topArtistsPreview.map((a, index) => (
-                <div key={a.id} className="artist-card artist-preview-card">
-                  <div className="artist-visual">
-                    <div className="detail-rank">#{String(index + 1).padStart(2, "0")}</div>
+                <div key={a.id} className={cx(cardBase, "flex min-h-full w-full snap-start flex-col gap-3 rounded-2xl p-3.5 transition hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]")}>
+                  <div className="relative min-w-0">
+                    <div className="absolute left-2.5 top-2.5 z-[1] rounded-full border border-white/10 bg-[rgba(7,9,10,0.72)] px-2 py-[3px] text-xs font-bold text-[color:var(--fg-dim)] backdrop-blur-[8px]">
+                      #{String(index + 1).padStart(2, "0")}
+                    </div>
                     {a.images[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={pickImage(a.images, 320)} alt={a.name} />
+                      <img
+                        src={pickImage(a.images, 320)}
+                        alt={a.name}
+                        className="block min-h-[180px] w-full rounded-xl bg-[#222] object-cover sm:min-h-[160px]"
+                      />
                     ) : (
                       <div
-                        className="artist-art"
+                        className="grid min-h-[180px] w-full place-items-center rounded-xl bg-[#222] text-4xl font-extrabold tracking-[-0.02em] text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.4)] sm:min-h-[160px] sm:text-[28px]"
                         style={{ backgroundImage: gradientFor(a.name) }}
                       >
                         <span>
@@ -361,23 +360,28 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                  <div className="name">{a.name}</div>
-                  <div className="meta">
+                  <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-base font-bold text-[color:var(--fg)]">
+                    {a.name}
+                  </div>
+                  <div className="text-[13px] text-[color:var(--fg-muted)]">
                     {formatNumber(a.followers)} followers
                   </div>
-                  <div className="chips">
+                  <div className="flex min-h-8 flex-wrap gap-2">
                     {(a.genres.length === 0 ? ["No genres yet"] : a.genres.slice(0, 2)).map((genre) => (
                       <span
                         key={`${a.id}-${genre}`}
-                        className={`chip ${a.genres.length === 0 ? "chip-muted" : ""}`}
+                        className={cx(
+                          "rounded-full border border-[color:var(--border)] bg-[color:var(--bg-elevated)] px-3.5 py-[7px] text-xs font-medium",
+                          a.genres.length === 0 ? "text-[color:var(--fg-muted)]" : "text-[color:var(--fg)]"
+                        )}
                       >
                         {genre}
                       </span>
                     ))}
                   </div>
-                  <div className="pop-bar">
+                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.04]">
                     <div
-                      className="pop-bar-fill"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-hover))]"
                       style={{ width: `${a.popularity}%` }}
                     />
                   </div>
@@ -386,69 +390,51 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <div className="split">
-            <section className="section">
-              <div className="section-head">
-                <h2>Top Tracks</h2>
-                <button
-                  className="see-more"
-                  type="button"
-                  onClick={() => {
-                    router.push(`/dashboard/tracks?timeRange=${timeRange}`);
-                  }}
-                >
-                  See more →
-                </button>
-              </div>
-              <div className="list">
-                {summary.topTracks.map((t, i) => (
-                  <div className="list-row track-row" key={t.id}>
-                    <div className="index">{String(i + 1).padStart(2, "0")}</div>
-                    <ArtBlock seed={t.album || t.name} imageUrl={pickImage(t.albumImages)} />
-                    <div className="track-info">
-                      <div className="title">{t.name}</div>
-                      <div className="subtitle">
-                        {t.artists.map((ar) => ar.name).join(", ")} · {t.album}
-                      </div>
-                    </div>
-                    <div className="meta">{formatDuration(t.duration_ms)}</div>
-                  </div>
-                ))}
-              </div>
+          <div className="mt-0 grid grid-cols-2 gap-6 max-[900px]:grid-cols-1 max-[900px]:gap-0">
+            <section className="mt-11 min-w-0 sm:mt-7">
+              <SectionHeader
+                title="Top Tracks"
+                actionLabel="See more →"
+                onAction={() => {
+                  router.push(`/dashboard/tracks?timeRange=${timeRange}`);
+                }}
+              />
+              <MediaList
+                items={summary.topTracks.map((t, i) => ({
+                  key: t.id,
+                  index: i,
+                  title: t.name,
+                  subtitle: `${t.artists.map((ar) => ar.name).join(", ")} · ${t.album}`,
+                  imageSeed: t.album || t.name,
+                  imageUrl: pickImage(t.albumImages),
+                  trailing: formatDuration(t.duration_ms)
+                }))}
+              />
             </section>
 
-            <section className="section">
-              <div className="section-head">
-                <h2>Recently Played</h2>
-                <button
-                  className="see-more"
-                  type="button"
-                  onClick={() => {
-                    router.push("/dashboard/recently-played");
-                  }}
-                >
-                  See more →
-                </button>
-              </div>
-              <div className="list">
-              {summary.recentlyPlayed.map((p, i) => (
-                <div className="list-row track-row" key={`${p.track.id}-${p.played_at}`}>
-                  <div className="index">{String(i + 1).padStart(2, "0")}</div>
-                  <ArtBlock seed={p.track.album || p.track.name} imageUrl={pickImage(p.track.albumImages)} />
-                  <div className="track-info">
-                    <div className="title">{p.track.name}</div>
-                    <div className="subtitle">
-                      {p.track.artists.map((ar) => ar.name).join(", ")}
-                    </div>
-                  </div>
-                  <div className="meta">{formatRelative(p.played_at)}</div>
-                </div>
-              ))}
-              </div>
+            <section className="mt-11 min-w-0 sm:mt-7">
+              <SectionHeader
+                title="Recently Played"
+                actionLabel="See more →"
+                onAction={() => {
+                  router.push("/dashboard/recently-played");
+                }}
+              />
+              <MediaList
+                items={summary.recentlyPlayed.map((p, i) => ({
+                  key: `${p.track.id}-${p.played_at}`,
+                  index: i,
+                  title: p.track.name,
+                  subtitle: p.track.artists.map((ar) => ar.name).join(", "),
+                  imageSeed: p.track.album || p.track.name,
+                  imageUrl: pickImage(p.track.albumImages),
+                  trailing: formatRelative(p.played_at)
+                }))}
+              />
             </section>
           </div>
 
-          <footer className="footer">
+          <footer className="mt-14 border-t border-[color:var(--border)] pt-6 text-center text-xs text-[color:var(--fg-dim)]">
             Built with Next.js + Ballerina · Live data via Spotify Web API
           </footer>
         </>
