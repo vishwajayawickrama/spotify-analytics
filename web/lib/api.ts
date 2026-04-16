@@ -30,6 +30,12 @@ export type SpotifyTrack = {
 
 export type PlayHistoryItem = { played_at: string; track: SpotifyTrack };
 
+export type ListeningHistoryResponse = {
+  history: PlayHistoryItem[];
+  fetchedItems: number;
+  truncated: boolean;
+};
+
 export type UserProfile = {
   id: string;
   display_name: string;
@@ -101,6 +107,10 @@ export const analyticsApi = {
     }),
   recentlyPlayed: (limit = 20, accessToken?: string) =>
     call<PlayHistoryItem[]>(`/recently-played?limit=${limit}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+    }),
+  listeningHistory: (maxItems = 5000, accessToken?: string) =>
+    call<ListeningHistoryResponse>(`/listening-history?maxItems=${maxItems}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
     })
 };

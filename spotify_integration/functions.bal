@@ -42,6 +42,63 @@ public isolated function fetchRecentlyPlayed(string accessToken, int 'limit = 20
     return toRecentlyPlayed(payload);
 }
 
+public isolated function fetchListeningHistory(string accessToken, int maxItems = 5000)
+        returns ListeningHistoryResponse|error {
+    int safeMaxItems = maxItems < 50 ? 50 : maxItems;
+    int total = 0;
+    boolean truncated = false;
+    string? beforeCursor = ();
+    PlayHistoryItem[] history = [];
+
+    while total < safeMaxItems {
+        int remaining = safeMaxItems - total;
+        int pageLimit = remaining < 50 ? remaining : 50;
+        string path = string `/me/player/recently-played?limit=${pageLimit}`;
+        if beforeCursor is string {
+            path = string `${path}&before=${beforeCursor}`;
+        }
+
+        json payload = check spotifyClient->get(path, authHeaders(accessToken));
+        PlayHistoryItem[] page = check toRecentlyPlayed(payload);
+        if page.length() == 0 {
+            break;
+        }
+
+        foreach PlayHistoryItem item in page {
+            history.push(item);
+        }
+        total = history.length();
+
+        map<json> payloadMap = check payload.ensureType();
+        if !payloadMap.hasKey("cursors") {
+            break;
+        }
+        json cursorsJson = payloadMap["cursors"];
+        if cursorsJson is () {
+            break;
+        }
+        map<json> cursorMap = check cursorsJson.ensureType();
+        if !cursorMap.hasKey("before") {
+            break;
+        }
+        json beforeJson = cursorMap["before"];
+        if !(beforeJson is string) || beforeJson.length() == 0 {
+            break;
+        }
+        beforeCursor = beforeJson;
+    }
+
+    if total >= safeMaxItems {
+        truncated = true;
+    }
+
+    return {
+        history,
+        fetchedItems: total,
+        truncated
+    };
+}
+
 // Aggregates several endpoints into a single analytics summary.
 public isolated function buildAnalyticsSummary(string accessToken, string timeRange = "medium_term")
         returns AnalyticsSummary|error {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   analyticsApi,
@@ -13,7 +13,11 @@ import {
 } from "@/lib/api";
 import {
   ArtBlock,
+  LISTENING_WINDOWS,
+  Sparkline,
   TIME_RANGES,
+  deriveListeningWindowMetrics,
+  formatDelta,
   formatDuration,
   formatNumber,
   formatRelative,
@@ -21,7 +25,7 @@ import {
 } from "@/lib/dashboardShared";
 import { gradientFor } from "@/lib/placeholderData";
 
-type SectionKey = "artists" | "tracks" | "recently-played";
+type SectionKey = "artists" | "tracks" | "recently-played" | "listening-activity";
 
 const SECTION_META: Record<SectionKey, { title: string; description: string }> = {
   artists: {
@@ -35,6 +39,10 @@ const SECTION_META: Record<SectionKey, { title: string; description: string }> =
   "recently-played": {
     title: "Recently Played",
     description: "The tracks you listened to most recently, in reverse chronological order."
+  },
+  "listening-activity": {
+    title: "Listening Activity",
+    description: "Windowed play counts and trend changes across the last hour, day, week, month, and year."
   }
 };
 
@@ -58,9 +66,13 @@ export default function DashboardDetailClient({ section }: { section: string }) 
   const [artists, setArtists] = useState<SpotifyArtist[]>([]);
   const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistoryItem[]>([]);
+  const [listeningHistory, setListeningHistory] = useState<PlayHistoryItem[]>([]);
+  const [historyTruncated, setHistoryTruncated] = useState(false);
 
   const requestedTimeRange = searchParams.get("timeRange");
   const timeRange: TimeRange = isTimeRange(requestedTimeRange) ? requestedTimeRange : "medium_term";
+  const requestedWindow = searchParams.get("window");
+  const selectedWindow = LISTENING_WINDOWS.find((windowDef) => windowDef.key === requestedWindow)?.key ?? "lastDay";
 
   useEffect(() => {
     const fallbackToken = window.sessionStorage.getItem("spotify_access_token");
@@ -117,7 +129,9 @@ export default function DashboardDetailClient({ section }: { section: string }) 
         ? analyticsApi.topArtists(timeRange, 50, tokenForApi)
         : typedSection === "tracks"
         ? analyticsApi.topTracks(timeRange, 50, tokenForApi)
-        : analyticsApi.recentlyPlayed(50, tokenForApi);
+        : typedSection === "recently-played"
+        ? analyticsApi.recentlyPlayed(50, tokenForApi)
+        : analyticsApi.listeningHistory(5000, tokenForApi);
 
     request
       .then((data) => {
@@ -125,6 +139,14 @@ export default function DashboardDetailClient({ section }: { section: string }) 
         setArtists(typedSection === "artists" ? (data as SpotifyArtist[]) : []);
         setTracks(typedSection === "tracks" ? (data as SpotifyTrack[]) : []);
         setRecentlyPlayed(typedSection === "recently-played" ? (data as PlayHistoryItem[]) : []);
+        if (typedSection === "listening-activity") {
+          const activityData = data as { history: PlayHistoryItem[]; truncated: boolean };
+          setListeningHistory(activityData.history);
+          setHistoryTruncated(activityData.truncated);
+        } else {
+          setListeningHistory([]);
+          setHistoryTruncated(false);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -149,14 +171,24 @@ export default function DashboardDetailClient({ section }: { section: string }) 
   const userLabel = auth?.profile?.display_name ?? "Your library";
   const initial = userLabel[0]?.toUpperCase() ?? "?";
   const sectionMeta = typedSection ? SECTION_META[typedSection] : null;
+  const activityMetrics = useMemo(
+    () => deriveListeningWindowMetrics(listeningHistory.map((item) => item.played_at)),
+    [listeningHistory]
+  );
+  const activeMetric = activityMetrics.find((metric) => metric.key === selectedWindow) ?? activityMetrics[0];
 
   function updateTimeRange(nextTimeRange: TimeRange) {
     const path = `/dashboard/${section}`;
-    if (typedSection === "recently-played") {
+    if (typedSection === "recently-played" || typedSection === "listening-activity") {
       router.push(path);
       return;
     }
     router.push(`${path}?timeRange=${nextTimeRange}`);
+  }
+
+  function updateWindow(nextWindow: string) {
+    const path = `/dashboard/${section}`;
+    router.push(`${path}?window=${nextWindow}`);
   }
 
   if (authLoading) {
@@ -216,7 +248,7 @@ export default function DashboardDetailClient({ section }: { section: string }) 
         </section>
       )}
 
-      {typedSection !== "recently-played" && (
+      {(typedSection === "artists" || typedSection === "tracks") && (
         <div className="controls">
           {TIME_RANGES.map((tr) => (
             <button
@@ -225,6 +257,20 @@ export default function DashboardDetailClient({ section }: { section: string }) 
               onClick={() => updateTimeRange(tr.value)}
             >
               {tr.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {typedSection === "listening-activity" && (
+        <div className="controls">
+          {LISTENING_WINDOWS.map((windowDef) => (
+            <button
+              key={windowDef.key}
+              className={`btn-ghost ${selectedWindow === windowDef.key ? "active" : ""}`}
+              onClick={() => updateWindow(windowDef.key)}
+            >
+              {windowDef.label}
             </button>
           ))}
         </div>
@@ -322,6 +368,41 @@ export default function DashboardDetailClient({ section }: { section: string }) 
                   <span className="meta detail-timestamp">{new Date(item.played_at).toLocaleString()}</span>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!loading && typedSection === "listening-activity" && activeMetric && (
+        <section className="section">
+          {historyTruncated && (
+            <div className="banner" style={{ marginTop: 0 }}>
+              <strong>Note:</strong>
+              Showing the most recent listening history slice due to API limits.
+            </div>
+          )}
+          <div className="activity-focus card">
+            <div className="stat-label">{activeMetric.label}</div>
+            <div className="stat-value">{formatNumber(activeMetric.count)}</div>
+            <div className={`activity-delta ${activeMetric.delta >= 0 ? "up" : "down"}`}>
+              {formatDelta(activeMetric.delta, activeMetric.deltaPct)}
+            </div>
+            <Sparkline points={activeMetric.series} width={760} height={220} />
+          </div>
+          <div className="activity-grid" style={{ marginTop: 16 }}>
+            {activityMetrics.map((metric) => (
+              <button
+                key={metric.key}
+                className={`card activity-card activity-select ${metric.key === selectedWindow ? "active" : ""}`}
+                onClick={() => updateWindow(metric.key)}
+                type="button"
+              >
+                <div className="stat-label">{metric.label}</div>
+                <div className="stat-value">{formatNumber(metric.count)}</div>
+                <div className={`activity-delta ${metric.delta >= 0 ? "up" : "down"}`}>
+                  {formatDelta(metric.delta, metric.deltaPct)}
+                </div>
+              </button>
             ))}
           </div>
         </section>

@@ -7,13 +7,17 @@ import {
   analyticsApi,
   type AuthSession,
   type AnalyticsSummary,
+  type PlayHistoryItem,
   type TimeRange
 } from "@/lib/api";
 import {
   ArtBlock,
+  Sparkline,
   TIME_RANGES,
   deriveAveragePopularity,
+  deriveListeningWindowMetrics,
   deriveTopGenres,
+  formatDelta,
   formatDuration,
   formatNumber,
   formatRelative,
@@ -30,6 +34,8 @@ export default function DashboardPage() {
 
   const [timeRange, setTimeRange] = useState<TimeRange>("medium_term");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [listeningHistory, setListeningHistory] = useState<PlayHistoryItem[]>([]);
+  const [historyTruncated, setHistoryTruncated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,10 +100,15 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     const tokenForApi = useTokenFallback ? accessToken ?? undefined : undefined;
-    analyticsApi
-      .summary(timeRange, tokenForApi)
-      .then((data) => {
-        if (!cancelled) setSummary(data);
+    Promise.all([
+      analyticsApi.summary(timeRange, tokenForApi),
+      analyticsApi.listeningHistory(5000, tokenForApi)
+    ])
+      .then(([summaryData, historyData]) => {
+        if (cancelled) return;
+        setSummary(summaryData);
+        setListeningHistory(historyData.history);
+        setHistoryTruncated(historyData.truncated);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -159,6 +170,11 @@ export default function DashboardPage() {
       artistCount: summary.topArtists.length
     };
   }, [summary]);
+
+  const listeningMetrics = useMemo(
+    () => deriveListeningWindowMetrics(listeningHistory.map((item) => item.played_at)),
+    [listeningHistory]
+  );
 
   if (authLoading) {
     return <div className="loading">Loading session…</div>;
@@ -288,6 +304,39 @@ export default function DashboardPage() {
                   {listenerStats?.avgPopularity ?? 0}/100 mainstream score
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section className="section">
+            <div className="section-head">
+              <h2>Listening Activity</h2>
+              <button
+                className="see-more"
+                type="button"
+                onClick={() => {
+                  router.push("/dashboard/listening-activity");
+                }}
+              >
+                See more →
+              </button>
+            </div>
+            {historyTruncated && (
+              <div className="banner" style={{ marginTop: 0, marginBottom: 16 }}>
+                <strong>Note:</strong>
+                Showing the most recent listening history slice due to API limits.
+              </div>
+            )}
+            <div className="activity-grid">
+              {listeningMetrics.map((metric) => (
+                <div className="card activity-card" key={metric.key}>
+                  <div className="stat-label">{metric.label}</div>
+                  <div className="stat-value">{formatNumber(metric.count)}</div>
+                  <div className={`activity-delta ${metric.delta >= 0 ? "up" : "down"}`}>
+                    {formatDelta(metric.delta, metric.deltaPct)}
+                  </div>
+                  <Sparkline points={metric.series} />
+                </div>
+              ))}
             </div>
           </section>
 

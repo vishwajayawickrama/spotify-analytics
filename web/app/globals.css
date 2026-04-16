@@ -379,6 +379,71 @@ button {
   transition: width 0.6s ease;
 }
 
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.activity-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-delta {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activity-delta.up {
+  color: var(--accent);
+}
+
+.activity-delta.down {
+  color: var(--danger);
+}
+
+.sparkline {
+  width: 100%;
+  height: 54px;
+  margin-top: 2px;
+}
+
+.sparkline polyline {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkline-empty {
+  color: var(--fg-muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.activity-focus {
+  padding: 22px;
+}
+
+.activity-focus .sparkline {
+  height: 220px;
+  margin-top: 12px;
+}
+
+.activity-select {
+  text-align: left;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.activity-select.active {
+  border-color: var(--accent);
+  background: rgba(29, 185, 84, 0.08);
+}
+
 /* ---------- Artist grid ---------- */
 
 .row {

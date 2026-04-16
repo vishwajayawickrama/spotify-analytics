@@ -5,7 +5,8 @@ export function generateStaticParams() {
   return [
     { section: "artists" },
     { section: "tracks" },
-    { section: "recently-played" }
+    { section: "recently-played" },
+    { section: "listening-activity" }
   ];
 }
 

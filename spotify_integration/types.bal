@@ -53,6 +53,12 @@ public type AnalyticsSummary record {
     decimal averageTrackPopularity;
 };
 
+public type ListeningHistoryResponse record {
+    PlayHistoryItem[] history;
+    int fetchedItems;
+    boolean truncated;
+};
+
 public type AuthSession record {
     boolean authenticated;
     UserProfile? profile = ();

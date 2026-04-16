@@ -9,6 +9,150 @@ export const TIME_RANGES = [
   { value: "long_term", label: "All time" }
 ] as const;
 
+export type ListeningWindowKey = "lastHour" | "lastDay" | "lastWeek" | "lastMonth" | "lastYear";
+
+export type ListeningSeriesPoint = {
+  label: string;
+  value: number;
+};
+
+export type ListeningWindowMetrics = {
+  key: ListeningWindowKey;
+  label: string;
+  count: number;
+  previousCount: number;
+  delta: number;
+  deltaPct: number | null;
+  series: ListeningSeriesPoint[];
+};
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+export const LISTENING_WINDOWS: Array<{
+  key: ListeningWindowKey;
+  label: string;
+  windowMs: number;
+  bucketMs: number;
+}> = [
+  { key: "lastHour", label: "Last hour", windowMs: HOUR_MS, bucketMs: 5 * 60 * 1000 },
+  { key: "lastDay", label: "Last day", windowMs: DAY_MS, bucketMs: HOUR_MS },
+  { key: "lastWeek", label: "Last week", windowMs: 7 * DAY_MS, bucketMs: DAY_MS },
+  { key: "lastMonth", label: "Last month", windowMs: 30 * DAY_MS, bucketMs: DAY_MS },
+  { key: "lastYear", label: "Last year", windowMs: 365 * DAY_MS, bucketMs: 30 * DAY_MS }
+];
+
+const labelFormatters: Record<ListeningWindowKey, Intl.DateTimeFormat> = {
+  lastHour: new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }),
+  lastDay: new Intl.DateTimeFormat(undefined, { hour: "2-digit" }),
+  lastWeek: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }),
+  lastMonth: new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }),
+  lastYear: new Intl.DateTimeFormat(undefined, { month: "short", year: "2-digit" })
+};
+
+function buildSeries(
+  playedAtMs: number[],
+  nowMs: number,
+  key: ListeningWindowKey,
+  windowMs: number,
+  bucketMs: number
+) {
+  const bucketCount = Math.max(1, Math.ceil(windowMs / bucketMs));
+  const start = nowMs - windowMs;
+  const values = new Array<number>(bucketCount).fill(0);
+
+  for (const ms of playedAtMs) {
+    if (ms < start || ms > nowMs) continue;
+    const rawIndex = Math.floor((ms - start) / bucketMs);
+    const index = Math.max(0, Math.min(bucketCount - 1, rawIndex));
+    values[index] += 1;
+  }
+
+  return values.map((value, index) => {
+    const bucketEnd = start + (index + 1) * bucketMs;
+    return {
+      label: labelFormatters[key].format(new Date(bucketEnd)),
+      value
+    };
+  });
+}
+
+export function deriveListeningWindowMetrics(historyIso: string[]): ListeningWindowMetrics[] {
+  const nowMs = Date.now();
+  const playedAtMs = historyIso
+    .map((iso) => Date.parse(iso))
+    .filter((ms) => Number.isFinite(ms))
+    .sort((a, b) => a - b);
+
+  return LISTENING_WINDOWS.map((windowDef) => {
+    const { key, label, windowMs, bucketMs } = windowDef;
+    const currentStart = nowMs - windowMs;
+    const previousStart = nowMs - 2 * windowMs;
+
+    let count = 0;
+    let previousCount = 0;
+    for (const ms of playedAtMs) {
+      if (ms >= currentStart && ms <= nowMs) {
+        count += 1;
+      } else if (ms >= previousStart && ms < currentStart) {
+        previousCount += 1;
+      }
+    }
+
+    const delta = count - previousCount;
+    const deltaPct = previousCount > 0 ? (delta / previousCount) * 100 : null;
+
+    return {
+      key,
+      label,
+      count,
+      previousCount,
+      delta,
+      deltaPct,
+      series: buildSeries(playedAtMs, nowMs, key, windowMs, bucketMs)
+    };
+  });
+}
+
+export function formatDelta(delta: number, deltaPct: number | null) {
+  const sign = delta > 0 ? "+" : "";
+  if (deltaPct === null) {
+    return `${sign}${delta} vs previous`;
+  }
+  const pct = Math.abs(deltaPct).toFixed(1);
+  return `${sign}${delta} (${pct}%)`;
+}
+
+export function Sparkline({
+  points,
+  width = 180,
+  height = 54
+}: {
+  points: ListeningSeriesPoint[];
+  width?: number;
+  height?: number;
+}) {
+  if (points.length === 0) {
+    return <div className="sparkline-empty">No data</div>;
+  }
+
+  const maxY = Math.max(1, ...points.map((p) => p.value));
+  const step = points.length > 1 ? width / (points.length - 1) : width;
+  const polyline = points
+    .map((p, index) => {
+      const x = index * step;
+      const y = height - (p.value / maxY) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
+      <polyline points={polyline} />
+    </svg>
+  );
+}
+
 export function formatDuration(ms: number) {
   const totalSec = Math.round(ms / 1000);
   const m = Math.floor(totalSec / 60);
