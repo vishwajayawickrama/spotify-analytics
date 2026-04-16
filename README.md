@@ -259,3 +259,8 @@ user-read-recently-played
 MIT. Use freely for personal and educational projects. Comply with the
 [Spotify Developer Terms](https://developer.spotify.com/terms) when deploying
 your own copy.
+
+
+
+### TODOs
+- Create ETL pipeline to Spotify OLTP to Our analytics OLAP data warehouse.
