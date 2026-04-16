@@ -595,6 +595,62 @@ button {
     gap: 12px;
   }
 
+  .detail-grid-artists {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .detail-grid-artists .artist-card {
+    padding: 12px;
+    gap: 10px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .detail-grid-artists .artist-visual {
+    flex: 0 0 76px;
+    width: 76px;
+  }
+
+  .detail-grid-artists .artist-visual img,
+  .detail-grid-artists .artist-visual .artist-art {
+    width: 76px;
+    height: 76px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .detail-grid-artists .artist-visual .artist-art {
+    font-size: 20px;
+    border-radius: 12px;
+  }
+
+  .detail-grid-artists .artist-content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .detail-grid-artists .artist-content .name {
+    font-size: 13px;
+    margin-top: 0;
+  }
+
+  .detail-grid-artists .artist-content .meta {
+    font-size: 11px;
+  }
+
+  .detail-grid-artists .artist-content .chips {
+    gap: 6px;
+  }
+
+  .detail-grid-artists .artist-content .chip {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .detail-grid-artists .artist-content .pop-bar {
+    margin-top: 4px;
+  }
+
   .detail-list-row,
   .list-row.track-row {
     grid-template-columns: 24px 44px minmax(0, 1fr);
@@ -701,6 +757,18 @@ button {
   gap: 18px;
 }
 
+.artist-visual {
+  position: relative;
+  min-width: 0;
+}
+
+.artist-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
 .artist-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -753,6 +821,23 @@ button {
 
 .detail-artist-card {
   gap: 10px;
+}
+
+.detail-grid-artists .artist-card img,
+.detail-grid-artists .artist-art {
+  width: 100%;
+}
+
+.detail-grid-artists .artist-visual .detail-rank {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  background: rgba(7, 9, 10, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 3px 8px;
+  backdrop-filter: blur(8px);
 }
 
 .detail-rank {

@@ -282,40 +282,44 @@ export default function DashboardDetailClient({ section }: { section: string }) 
 
       {!loading && typedSection === "artists" && (
         <section className="section">
-          <div className="detail-grid">
+          <div className="detail-grid detail-grid-artists">
             {artists.map((artist, index) => (
               <div key={artist.id} className="artist-card detail-artist-card">
-                <div className="detail-rank">#{String(index + 1).padStart(2, "0")}</div>
-                {artist.images[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={artist.images[0].url} alt={artist.name} />
-                ) : (
-                  <div className="artist-art" style={{ backgroundImage: gradientFor(artist.name) }}>
-                    <span>
-                      {artist.name
-                        .split(" ")
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .map((word) => word[0]?.toUpperCase() ?? "")
-                        .join("")}
-                    </span>
-                  </div>
-                )}
-                <div className="name">{artist.name}</div>
-                <div className="meta">{formatNumber(artist.followers)} followers</div>
-                <div className="chips detail-chip-wrap">
-                  {artist.genres.length === 0 ? (
-                    <span className="chip chip-muted">No genres surfaced</span>
+                <div className="artist-visual">
+                  <div className="detail-rank">#{String(index + 1).padStart(2, "0")}</div>
+                  {artist.images[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={artist.images[0].url} alt={artist.name} />
                   ) : (
-                    artist.genres.slice(0, 3).map((genre) => (
-                      <span key={`${artist.id}-${genre}`} className="chip">
-                        {genre}
+                    <div className="artist-art" style={{ backgroundImage: gradientFor(artist.name) }}>
+                      <span>
+                        {artist.name
+                          .split(" ")
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((word) => word[0]?.toUpperCase() ?? "")
+                          .join("")}
                       </span>
-                    ))
-                  )}
-                </div>
-                <div className="pop-bar">
-                  <div className="pop-bar-fill" style={{ width: `${artist.popularity}%` }} />
+                    </div>
+                    )}
+                  </div>
+                <div className="artist-content">
+                  <div className="name">{artist.name}</div>
+                  <div className="meta">{formatNumber(artist.followers)} followers</div>
+                  <div className="chips detail-chip-wrap">
+                    {artist.genres.length === 0 ? (
+                      <span className="chip chip-muted">No genres surfaced</span>
+                    ) : (
+                      artist.genres.slice(0, 3).map((genre) => (
+                        <span key={`${artist.id}-${genre}`} className="chip">
+                          {genre}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                  <div className="pop-bar">
+                    <div className="pop-bar-fill" style={{ width: `${artist.popularity}%` }} />
+                  </div>
                 </div>
               </div>
             ))}
