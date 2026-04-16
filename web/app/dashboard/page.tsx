@@ -12,11 +12,9 @@ import {
 } from "@/lib/api";
 import {
   ArtBlock,
-  Sparkline,
   TIME_RANGES,
   deriveAveragePopularity,
   deriveListeningWindowMetrics,
-  deriveTopGenres,
   formatDelta,
   formatDuration,
   formatNumber,
@@ -139,8 +137,6 @@ export default function DashboardPage() {
   const listenerStats = useMemo(() => {
     if (!summary) return null;
     const topArtist = summary.topArtists[0];
-    const derivedTopGenres = deriveTopGenres(summary);
-    const topGenre = derivedTopGenres[0];
     const tracks = summary.topTracks;
     const avgDurationMs = tracks.length
       ? tracks.reduce((acc, t) => acc + t.duration_ms, 0) / tracks.length
@@ -157,23 +153,22 @@ export default function DashboardPage() {
         : avgPopularity >= 35
         ? "Eclectic"
         : "Underground";
-    const uniqueAlbums = new Set(tracks.map((t) => t.album)).size;
     return {
       topArtist,
-      topGenre,
-      topGenres: derivedTopGenres,
       avgDurationMs,
       avgPopularity,
       tasteLabel,
-      uniqueAlbums,
-      trackCount: tracks.length,
-      artistCount: summary.topArtists.length
+      trackCount: tracks.length
     };
   }, [summary]);
 
   const listeningMetrics = useMemo(
     () => deriveListeningWindowMetrics(listeningHistory.map((item) => item.played_at)),
     [listeningHistory]
+  );
+  const lastDayListening = useMemo(
+    () => listeningMetrics.find((metric) => metric.key === "lastDay"),
+    [listeningMetrics]
   );
 
   if (authLoading) {
@@ -269,13 +264,27 @@ export default function DashboardPage() {
               </div>
 
               <div className="card stat-card">
-                <div className="stat-label">Top genre</div>
-                <div className="stat-value stat-value-lg">
-                  {listenerStats?.topGenre ?? "—"}
-                </div>
-                <div className="stat-sub">
-                  Across {listenerStats?.artistCount ?? 0} top artists
-                </div>
+                <button
+                  type="button"
+                  className="activity-summary-button"
+                  onClick={() => {
+                    router.push("/dashboard/listening-activity?window=lastDay");
+                  }}
+                  aria-label="Open listening activity details"
+                >
+                  <div className="activity-summary-head">
+                    <div className="stat-label">Listening activity (last day)</div>
+                    <span className="activity-summary-arrow" aria-hidden>
+                      →
+                    </span>
+                  </div>
+                  <div className="stat-value">{formatNumber(lastDayListening?.count ?? 0)}</div>
+                  <div className={`activity-delta ${(lastDayListening?.delta ?? 0) >= 0 ? "up" : "down"}`}>
+                    {formatDelta(lastDayListening?.delta ?? 0, lastDayListening?.deltaPct ?? null)}
+                  </div>
+                  <div className="stat-sub">Based on {formatNumber(listeningHistory.length)} plays fetched.</div>
+                  <div className="stat-sub activity-summary-hint">See more with all activity filters</div>
+                </button>
               </div>
 
               <div className="card stat-card">
@@ -307,54 +316,12 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="section">
-            <div className="section-head">
-              <h2>Listening Activity</h2>
-              <button
-                className="see-more"
-                type="button"
-                onClick={() => {
-                  router.push("/dashboard/listening-activity");
-                }}
-              >
-                See more →
-              </button>
+          {historyTruncated && (
+            <div className="banner" style={{ marginTop: 16, marginBottom: 0 }}>
+              <strong>Note:</strong>
+              Listening activity is shown from available Spotify history.
             </div>
-            {historyTruncated && (
-              <div className="banner" style={{ marginTop: 0, marginBottom: 16 }}>
-                <strong>Note:</strong>
-                Showing the most recent listening history slice due to API limits.
-              </div>
-            )}
-            <div className="activity-grid">
-              {listeningMetrics.map((metric) => (
-                <div className="card activity-card" key={metric.key}>
-                  <div className="stat-label">{metric.label}</div>
-                  <div className="stat-value">{formatNumber(metric.count)}</div>
-                  <div className={`activity-delta ${metric.delta >= 0 ? "up" : "down"}`}>
-                    {formatDelta(metric.delta, metric.deltaPct)}
-                  </div>
-                  <Sparkline points={metric.series} />
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="section">
-            <h2>Top Genres</h2>
-            <div className="chips">
-              {listenerStats?.topGenres.length === 0 && (
-                <span className="meta" style={{ color: "var(--fg-muted)" }}>
-                  No genre data for this range.
-                </span>
-              )}
-              {listenerStats?.topGenres.map((g, i) => (
-                <span key={g} className="chip" style={{ animationDelay: `${i * 30}ms` }}>
-                  {g}
-                </span>
-              ))}
-            </div>
-          </section>
+          )}
 
           <section className="section">
             <div className="section-head">

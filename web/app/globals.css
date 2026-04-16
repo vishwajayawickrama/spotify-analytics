@@ -293,15 +293,15 @@ button {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 }
 
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 20px;
+  padding: 18px;
   box-shadow: var(--shadow-card);
   transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
@@ -314,6 +314,40 @@ button {
 .stat-card {
   position: relative;
   overflow: hidden;
+}
+
+.activity-summary-button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.activity-summary-arrow {
+  color: var(--fg-muted);
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.activity-summary-button:hover .activity-summary-arrow {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+.activity-summary-hint {
+  color: var(--fg-muted);
+  margin-top: 4px;
 }
 
 .stat-card::before {
@@ -839,6 +873,15 @@ button {
     padding: 36px 28px;
   }
   .signin-card h1 {
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
     font-size: 30px;
   }
   .page {
