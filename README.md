@@ -173,9 +173,9 @@ The reference deployment is:
      `https://<...>.choreoapis.dev/<project>/<component>/v1.0`
 4. In the Choreo console, **disable OAuth2** under each endpoint's
    **Configure & Deploy → Endpoint Authentication**. The browser-facing OAuth
-   flow needs these endpoints public; authentication is enforced by the
+   flow needs these endpoints to be public; authentication is enforced by the
    Ballerina service itself via the Spotify access token.
-5. Under **Configurations**, set the values from `Config.production.toml.example`
+5. Under **Configurations**, set the values from `Config.production.toml.example.`
    as config values/secrets:
    - `spotifyClientId`, `spotifyClientSecret`
    - `allowedOrigin` — your frontend origin, e.g.
@@ -203,7 +203,7 @@ the Choreo gateway before traffic reaches the Ballerina service. That is why
 
 For better secret hygiene, move the URLs into **Repository Variables**
 (`vars.BACKEND_BASE_URL`, `vars.ANALYTICS_API_URL`) and reference them from
-the workflow instead of hardcoding.
+The workflow instead of hardcoding.
 
 ---
 
@@ -245,7 +245,7 @@ user-read-recently-played
 | Symptom | Likely cause |
 |---------|--------------|
 | `redirect_uri: Not matching configuration` on Spotify's page | `oauthCallbackUrl` in `Config.toml` does not exactly match a Redirect URI registered in your Spotify app. |
-| `{"description":"The requested resource is not available.","code":"404"}` from Choreo | Hitting a path that doesn't exist on that endpoint. Check that `/auth` routes go to the auth endpoint and `/analytics` routes go to the analytics endpoint. |
+| `{"description": "The requested resource is not available.","code":"404"}` from Choreo | Hitting a path that doesn't exist on that endpoint. Check that `/auth` routes go to the auth endpoint and `/analytics` routes go to the analytics endpoint. |
 | `401 missing auth cookie` on `/analytics/*` | Frontend isn't sending the Bearer token. Confirm that `window.sessionStorage.getItem("spotify_access_token")` has a value after login. |
 | `500 Forbidden — "The user is not registered for this application"` | User isn't on the allowlist. Add them in **Spotify Dashboard → User Management**. |
 | CORS error: `Access-Control-Allow-Credentials` must be `true` | Don't send `credentials: "include"` on analytics calls — those use the Bearer header instead. |
@@ -263,4 +263,6 @@ your own copy.
 
 
 ### TODOs
-- Create ETL pipeline to Spotify OLTP to Our analytics OLAP data warehouse.
+- Create an ETL pipeline from Spotify OLTP to our analytics OLAP data warehouse.
+- We need to connect a database/warehouse like Snowflake into this and periodically pull data from spotify api and save it in persistent storage, and only serve analytics from the Data layer inside our data plane.
+- Have some observability to monitor cron jobs running and data pulling from spotify api.
